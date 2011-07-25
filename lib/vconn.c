@@ -51,6 +51,7 @@
 #include "oflib/ofl.h"
 #include "oflib/ofl-messages.h"
 #include "oflib-exp/ofl-exp.h"
+#include "oflib-exp/ofl-exp-match.h"
 
 #define LOG_MODULE VLM_vconn
 #include "vlog.h"
@@ -74,10 +75,18 @@ static struct ofl_exp_msg ofl_exp_msg =
          .free      = ofl_exp_msg_free,
          .to_string = ofl_exp_msg_to_string};
 
+static struct ofl_exp_match ofl_exp_match = 
+         {.pack = ofl_exp_match_pack,
+         .unpack    = ofl_exp_match_unpack,
+         .free      = ofl_exp_match_free,
+         .ofp_len   = ofl_exp_match_length,
+         .to_string = ofl_exp_match_to_string};
+
+
 static struct ofl_exp ofl_exp =
         {.act   = NULL,
          .inst  = NULL,
-         .match = NULL,
+         .match = &ofl_exp_match,
          .stats = NULL,
          .msg   = &ofl_exp_msg};
 
@@ -374,7 +383,7 @@ vcs_recv_hello(struct vconn *vconn)
         } else {
             struct ofl_msg_header *msg;
             char *str;
-
+          
             if (!ofl_msg_unpack(b->data, b->size, &msg, NULL/*xid*/, &ofl_exp)) {
                 str = ofl_msg_to_string(msg, &ofl_exp);
                 ofl_msg_free(msg, &ofl_exp);
@@ -593,8 +602,7 @@ do_send(struct vconn *vconn, struct ofpbuf *buf)
     } else {
         struct ofl_msg_header *msg;
         char *str;
-
-        if (!ofl_msg_unpack(buf->data, buf->size, &msg, NULL/*xid*/, &ofl_exp)) {
+        if (!ofl_msg_unpack(buf->data, buf->size, &msg, NULL/*xid*/, &ofl_exp)){
             str = ofl_msg_to_string(msg, &ofl_exp);
             ofl_msg_free(msg, &ofl_exp);
         } else {

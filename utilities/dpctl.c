@@ -51,11 +51,14 @@
 #include "oflib/ofl.h"
 #include "oflib-exp/ofl-exp.h"
 #include "oflib-exp/ofl-exp-openflow.h"
+#include "oflib-exp/ofl-exp-match.h"
+#include "oflib-exp/ofl-exp-ext-messages.h"
 
 #include "command-line.h"
 #include "compiler.h"
 #include "dpif.h"
 #include "openflow/nicira-ext.h"
+#include "openflow/match-ext.h"
 #include "openflow/openflow-ext.h"
 #include "ofpbuf.h"
 #include "openflow/openflow.h"
@@ -91,6 +94,8 @@ struct command {
 
 static struct command all_commands[];
 
+static int preferred_flow_format = 0;
+
 static void
 usage(void) NO_RETURN;
 
@@ -102,7 +107,7 @@ static uint8_t mask_all[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 
 static void
-parse_flow_mod_args(char *str, struct ofl_msg_flow_mod *req);
+parse_flow_mod_args(char *str, struct ofl_ext_flow_mod *req);
 
 static void
 parse_group_mod_args(char *str, struct ofl_msg_group_mod *req);
@@ -169,6 +174,12 @@ parse16(char *str, struct names16 *names, size_t names_num, uint16_t max, uint16
 static int
 parse32(char *str, struct names32 *names, size_t names_num, uint32_t max, uint32_t *val);
 
+int
+ofputil_flow_format_from_string(const char *s);
+
+const char *
+ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format);
+
 
 static struct ofl_exp_msg dpctl_exp_msg =
         {.pack      = ofl_exp_msg_pack,
@@ -176,10 +187,17 @@ static struct ofl_exp_msg dpctl_exp_msg =
          .free      = ofl_exp_msg_free,
          .to_string = ofl_exp_msg_to_string};
 
+static struct ofl_exp_match dpctl_exp_match =
+        {.pack      = ofl_exp_match_pack,
+         .unpack    = ofl_exp_match_unpack,
+         .free      = ofl_exp_match_free,
+         .ofp_len   = ofl_exp_match_length,
+         .to_string = ofl_exp_match_to_string};
+
 static struct ofl_exp dpctl_exp =
         {.act   = NULL,
          .inst  = NULL,
-         .match = NULL,
+         .match = &dpctl_exp_match,
          .stats = NULL,
          .msg   = &dpctl_exp_msg};
 
@@ -191,7 +209,6 @@ dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
     uint8_t *bufreq;
     size_t bufreq_size;
     int error;
-
     error = ofl_msg_pack(req, XID, &bufreq, &bufreq_size, &dpctl_exp);
     if (error) {
         ofp_fatal(0, "Error packing request.");
@@ -200,12 +217,12 @@ dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
     ofpbufreq = ofpbuf_new(0);
     ofpbuf_use(ofpbufreq, bufreq, bufreq_size);
     ofpbuf_put_uninit(ofpbufreq, bufreq_size);
-
+    printf("Unpacking here");
     error = vconn_transact(vconn, ofpbufreq, &ofpbufrepl);
     if (error) {
         ofp_fatal(0, "Error during transaction.");
     }
-
+    
     error = ofl_msg_unpack(ofpbufrepl->data, ofpbufrepl->size, repl, NULL /*xid_ptr*/, &dpctl_exp);
     if (error) {
         ofp_fatal(0, "Error unpacking reply.");
@@ -224,11 +241,9 @@ dpctl_transact_and_print(struct vconn *vconn, struct ofl_msg_header *req,
                                         struct ofl_msg_header **repl) {
     struct ofl_msg_header *reply;
     char *str;
-
     str = ofl_msg_to_string(req, &dpctl_exp);
     printf("\nSENDING:\n%s\n\n", str);
     free(str);
-
     dpctl_transact(vconn, req, &reply);
 
     str = ofl_msg_to_string(reply, &dpctl_exp);
@@ -270,16 +285,15 @@ dpctl_send(struct vconn *vconn, struct ofl_msg_header *msg) {
     uint8_t *buf;
     size_t buf_size;
     int error;
-
+     
     error = ofl_msg_pack(msg, XID, &buf, &buf_size, &dpctl_exp);
     if (error) {
         ofp_fatal(0, "Error packing request.");
-    }
-
+    } 
     ofpbuf = ofpbuf_new(0);
     ofpbuf_use(ofpbuf, buf, buf_size);
     ofpbuf_put_uninit(ofpbuf, buf_size);
-
+    struct ofp_experimenter_header *exp = (struct ofp_experimenter_header*) ofpbuf->data;
     error = vconn_send_block(vconn, ofpbuf);
     if (error) {
         ofp_fatal(0, "Error during transaction.");
@@ -291,11 +305,10 @@ dpctl_send(struct vconn *vconn, struct ofl_msg_header *msg) {
 static void
 dpctl_send_and_print(struct vconn *vconn, struct ofl_msg_header *msg) {
     char *str;
-
     str = ofl_msg_to_string(msg, &dpctl_exp);
     printf("\nSENDING:\n%s\n\n", str);
     free(str);
-
+   
     dpctl_send(vconn, msg);
 }
 
@@ -563,7 +576,28 @@ set_config(struct vconn *vconn, int argc UNUSED, char *argv[]) {
 
 static void
 flow_mod(struct vconn *vconn, int argc, char *argv[]) {
-    struct ofl_msg_flow_mod msg =
+    
+    
+    struct ofl_ext_flow_mod msg = 
+     {{{    {.type = OFPT_EXPERIMENTER  },
+             .experimenter_id = EXTENDED_MATCH_ID},
+             .type =  EXT_FLOW_MOD},
+             .cookie = 0x0000000000000000ULL,
+             .cookie_mask = 0x0000000000000000ULL,
+             .table_id = 0xff,
+             .command = OFPFC_ADD,
+             .idle_timeout = OFP_FLOW_PERMANENT,
+             .hard_timeout = OFP_FLOW_PERMANENT,
+             .priority = OFP_DEFAULT_PRIORITY,
+             .buffer_id = 0xffffffff,
+             .out_port = OFPP_ANY,
+             .out_group = OFPG_ANY,
+             .flags = 0x0000,
+             .match = NULL,
+             .instructions_num = 0,
+             .instructions = NULL}; 
+   
+   /* struct ofl_msg_flow_mod msg =
             {{.type = OFPT_FLOW_MOD},
              .cookie = 0x0000000000000000ULL,
              .cookie_mask = 0x0000000000000000ULL,
@@ -578,24 +612,26 @@ flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .flags = 0x0000,
              .match = NULL,
              .instructions_num = 0,
-             .instructions = NULL};
-
+             .instructions = NULL};*/
+    struct ofl_ext_match *m = malloc(sizeof( struct ofl_ext_match));
+   
     parse_flow_mod_args(argv[0], &msg);
 
     if (argc > 1) {
         size_t i;
         size_t inst_num = argc - 2;
-
-        parse_match(argv[1], &(msg.match));
+        //parse_match(argv[1], &(msg.match));
 
         msg.instructions_num = inst_num;
-        msg.instructions = xmalloc(sizeof(struct ofl_instrcution_header *) * inst_num);
+        msg.instructions = xmalloc(sizeof(struct ofl_instruction_header *) * inst_num);
 
         for (i=0; i < inst_num; i++) {
             parse_inst(argv[2+i], &(msg.instructions[i]));
         }
     } else {
-        make_all_match(&(msg.match));
+        m->header.type = EXT_FLOW;
+        msg.match = (struct ofl_match_header*) m; 
+       // make_all_match(&(msg.match));
     }
     dpctl_send_and_print(vconn, (struct ofl_msg_header *)&msg);
 }
@@ -795,11 +831,11 @@ static struct command all_commands[] = {
 
 int main(int argc, char *argv[])
 {
+
     struct command *p;
     struct vconn *vconn;
     size_t i;
     int error;
-
     set_program_name(argv[0]);
     time_init();
     vlog_init();
@@ -819,7 +855,7 @@ int main(int argc, char *argv[])
     }
     argc -= 1;
     argv += 1;
-
+     
     for (i=0; i<NUM_ELEMS(all_commands); i++) {
         p = &all_commands[i];
         if (strcmp(p->name, argv[0]) == 0) {
@@ -832,6 +868,7 @@ int main(int argc, char *argv[])
                 ofp_fatal(0, "'%s' command takes at most %d arguments",
                           p->name, p->max_args);
             else {
+               
                 p->handler(vconn, argc, argv);
                 if (ferror(stdout)) {
                     ofp_fatal(0, "write to stdout failed");
@@ -858,6 +895,7 @@ parse_options(int argc, char *argv[])
     static struct option long_options[] = {
         {"timeout", required_argument, 0, 't'},
         {"verbose", optional_argument, 0, 'v'},
+        {"flow-format", required_argument, 0, 'F'},
         {"strict", no_argument, 0, OPT_STRICT},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'V'},
@@ -883,6 +921,12 @@ parse_options(int argc, char *argv[])
                           optarg);
             } else {
                 time_alarm(timeout);
+            }
+            break;
+       case 'F':
+            preferred_flow_format = ofputil_flow_format_from_string(optarg);
+            if (preferred_flow_format < 0) {
+                ofp_fatal(0, "unknown flow format `%s'", optarg);
             }
             break;
 
@@ -949,6 +993,7 @@ usage(void)
      printf("\nOther options:\n"
             "  --strict                    use strict match for flow commands\n"
             "  -t, --timeout=SECS          give up after SECS seconds\n"
+            "  -F, --flow-format=FORMAT    force particular flow format\n"
             "  -h, --help                  display this help message\n"
             "  -V, --version               display version information\n");
      exit(EXIT_SUCCESS);
@@ -1490,7 +1535,7 @@ parse_flow_stat_args(char *str, struct ofl_msg_stats_request_flow *req) {
 
 
 static void
-parse_flow_mod_args(char *str, struct ofl_msg_flow_mod *req) {
+parse_flow_mod_args(char *str, struct ofl_ext_flow_mod *req) {
     char *token, *saveptr = NULL;
 
     for (token = strtok_r(str, KEY_SEP, &saveptr); token != NULL; token = strtok_r(NULL, KEY_SEP, &saveptr)) {
@@ -1805,5 +1850,29 @@ parse32(char *str, struct names32 *names, size_t names_num, uint32_t max, uint32
         return 0;
     }
     return -1;
+}
+
+const char *
+ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format)
+{
+    switch (flow_format) {
+    case OFPMT_STANDARD:
+        return "openflow10";
+    case NXFF_TUN_ID_FROM_COOKIE:
+        return "tun_id_from_cookie";
+    case EXT_FLOW:
+        return "nxm";
+    default:
+        NOT_REACHED();
+    }
+}
+
+int
+ofputil_flow_format_from_string(const char *s)
+{
+    return (!strcmp(s, "openflow11") ? OFPMT_STANDARD
+            : !strcmp(s, "tun_id_from_cookie") ? NXFF_TUN_ID_FROM_COOKIE
+            : !strcmp(s, "nxm") ? EXT_FLOW
+            : -1);
 }
 

@@ -29,30 +29,39 @@
  * Author: Eder Leão Fernandes <ederlf@cpqd.com.br>
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
+
 #include "ofl-exp-match.h"
+#include "../oflib/ofl-log.h"
+
+#define LOG_MODULE ofl_exp
+OFL_LOG_INIT(LOG_MODULE)
 
 int
 ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
 
-    if(src->type == NXFF_NXM)      
+
+    if(src->type == EXT_FLOW){      
         struct ofl_ext_match *m = (struct ofl_ext_match *) src;
         struct ext_match *dst_match = (struct ext_match *) dst;
-        dst_match->type = htons(m->header.type);
-        dst_match->length = htons(m->length);
-        dst_match->wildcards = htonl( m->wildcards);
+        dst_match->header.type = htons(m->header.type);
+        dst_match->header.length = htons(m->length);
         memset(dst_match->pad, 0x00, 4);
         dst_match->match_fields = m->match_fields;
      } else {
         OFL_LOG_WARN(LOG_MODULE, "Experimenter match is not NXFF_NXM");
         return -1;
     }
-
+    return 0;
 }
 
 ofl_err
 ofl_exp_match_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match_header **dst){
 
-    struct ofl_match_standard *m;
+    struct ofl_ext_match *m;
     struct ext_match *src_match = (struct ext_match*) src; 
     
     if (*len < ntohs(src->length)) {
@@ -61,16 +70,17 @@ ntohs(src->length), *len);
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_LEN);
     }
     m = (struct ofl_ext_match *) malloc(sizeof(struct ofl_ext_match));
-    m->header.type = NXFF_NXM;
+    m->header.type = EXT_FLOW;
     m->length = *len;
-    m->wildcards = src_match->wildcards;
     m->match_fields = src_match->match_fields;
 
+    *dst = &m->header;
+    return 0;
 }
 
 int     
 ofl_exp_match_free(struct ofl_match_header *m){
-    if (match->type == NXFF_NXM) {
+    if (m->type == EXT_FLOW) {
             free(m);
     }
     else {
@@ -81,6 +91,8 @@ ofl_exp_match_free(struct ofl_match_header *m){
     
 size_t  
 ofl_exp_match_length(struct ofl_match_header *m){
+
+
 
 }
 

@@ -6,8 +6,9 @@
 /*A flexible array structure */
 struct flex_array {
 
-   uint32_t size;  /* Array size */
-   uint32_t total; /* Number of entries */
+   uint16_t size;  /* Array size */
+   uint16_t total; /* Number of entries */
+   uint8_t pad[4];  /* Allign to 64 bits */
    uint8_t entries[]; /* */
          
 };
