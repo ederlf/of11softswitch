@@ -1187,6 +1187,8 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
     size_t len = buf_len;
     ofl_err error = 0;
 
+    
+
     if (len < sizeof(struct ofp_header)) {
         OFL_LOG_WARN(LOG_MODULE, "Received message is shorter than ofp_header.");
         if (xid != NULL) {
@@ -1329,6 +1331,7 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
     }
      
    (*msg)->type = (enum ofp_type) oh->type;
+    
 
     return 0;
 }

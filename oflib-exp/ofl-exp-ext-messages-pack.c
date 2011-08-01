@@ -55,9 +55,8 @@ ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *b
     uint8_t *ptr;
     int i;
 
-    *buf_len = sizeof(struct ofp_ext_flow_mod) + ofl_structs_instructions_ofp_total_len(msg->instructions, msg->instructions_num, NULL);;
+    *buf_len = (sizeof(struct ofp_ext_flow_mod) -4) + ofl_exp_match_length(msg->match) + ofl_structs_instructions_ofp_total_len(msg->instructions, msg->instructions_num, NULL);;
     *buf     = (uint8_t *)malloc(*buf_len);
-    
     flow_mod = (struct ofp_ext_flow_mod *)(*buf);
     flow_mod->cookie       = hton64(msg->cookie);
     flow_mod->cookie_mask  = hton64(msg->cookie_mask);
@@ -70,11 +69,12 @@ ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *b
     flow_mod->out_port     = htonl( msg->out_port);
     flow_mod->out_group    = htonl( msg->out_group);
     flow_mod->flags        = htons( msg->flags);
-
-    ofl_exp_match_pack(msg->match, &(flow_mod->match.header));
-
-    ptr = (*buf) + sizeof(struct ofp_ext_flow_mod);
-
+    
+    if(msg->match != NULL)
+        ofl_exp_match_pack(msg->match, &(flow_mod->match->header));
+    else flow_mod->match = NULL;
+    
+    ptr = (*buf) + (sizeof(struct ofp_ext_flow_mod)-4) + ofl_exp_match_length(msg->match) ;
     for (i=0; i<msg->instructions_num; i++) {
         ptr += ofl_structs_instructions_pack(msg->instructions[i], (struct ofp_instruction *)ptr, NULL);
     }
@@ -105,12 +105,8 @@ ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *bu
      struct ofp_ext_header *oh;    
      oh = (struct ofp_ext_header *)(*buf);
 
-     oh->header.version = OFP_VERSION;
-     oh->header.type    = OFPT_EXPERIMENTER;
-     oh->header.length  = htons(*buf_len);
-     oh->header.xid     = htonl(0); 
-     oh->vendor = htons(EXTENDED_MATCH_ID);
-     oh->subtype = htons(EXT_FLOW_MOD); 
+     oh->vendor = htonl(EXTENDED_MATCH_ID);
+     oh->subtype = htonl(EXT_FLOW_MOD); 
      return error;
 } 
 

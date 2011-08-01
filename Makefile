@@ -105,19 +105,23 @@ lib_libopenflow_a_DEPENDENCIES = oflib/ofl-actions.o \
 	oflib/ofl-structs-pack.o oflib/ofl-structs-print.o \
 	oflib/ofl-structs-unpack.o oflib/ofl-print.o \
 	oflib-exp/ofl-exp.o oflib-exp/ofl-exp-nicira.o \
+	oflib-exp/ofl-exp-match.o oflib-exp/ofl-exp-ext-messages.o \
+	oflib-exp/ofl-exp-ext-messages-pack.o \
+	oflib-exp/ofl-exp-ext-messages-unpack.o \
 	oflib-exp/ofl-exp-openflow.o
 am__lib_libopenflow_a_SOURCES_DIST = lib/backtrace.c lib/backtrace.h \
-	lib/command-line.c lib/command-line.h lib/compiler.h \
-	lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
+	lib/byte-order.h lib/command-line.c lib/command-line.h \
+	lib/compiler.h lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
 	lib/dhcp-client.c lib/dhcp-client.h lib/dhcp.c lib/dhcp.h \
 	lib/dhparams.h lib/dirs.c lib/dirs.h lib/dynamic-string.c \
 	lib/dynamic-string.h lib/fatal-signal.c lib/fatal-signal.h \
 	lib/fault.c lib/fault.h lib/flex-array.h lib/flow.c lib/flow.h \
 	lib/hash.c lib/hash.h lib/hmap.c lib/hmap.h lib/leak-checker.c \
-	lib/leak-checker.h lib/list.c lib/list.h lib/mac-learning.c \
-	lib/mac-learning.h lib/netdev.c lib/netdev.h lib/ofp.c \
-	lib/ofp.h lib/ofpbuf.c lib/ofpbuf.h lib/packets.h lib/pcap.c \
-	lib/pcap.h lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
+	lib/leak-checker.h lib/list.c lib/list.h lib/nx-match.c \
+	lib/nx-match.h lib/mac-learning.c lib/mac-learning.h \
+	lib/netdev.c lib/netdev.h lib/ofp.c lib/ofp.h lib/ofpbuf.c \
+	lib/ofpbuf.h lib/packets.h lib/pcap.c lib/pcap.h \
+	lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
 	lib/port-array.h lib/process.c lib/process.h lib/queue.c \
 	lib/queue.h lib/random.c lib/random.h lib/rconn.c lib/rconn.h \
 	lib/sat-math.h lib/shash.c lib/shash.h lib/signals.c \
@@ -143,12 +147,12 @@ am_lib_libopenflow_a_OBJECTS = lib/backtrace.$(OBJEXT) \
 	lib/dynamic-string.$(OBJEXT) lib/fatal-signal.$(OBJEXT) \
 	lib/fault.$(OBJEXT) lib/flow.$(OBJEXT) lib/hash.$(OBJEXT) \
 	lib/hmap.$(OBJEXT) lib/leak-checker.$(OBJEXT) \
-	lib/list.$(OBJEXT) lib/mac-learning.$(OBJEXT) \
-	lib/netdev.$(OBJEXT) lib/ofp.$(OBJEXT) lib/ofpbuf.$(OBJEXT) \
-	lib/pcap.$(OBJEXT) lib/poll-loop.$(OBJEXT) \
-	lib/port-array.$(OBJEXT) lib/process.$(OBJEXT) \
-	lib/queue.$(OBJEXT) lib/random.$(OBJEXT) lib/rconn.$(OBJEXT) \
-	lib/shash.$(OBJEXT) lib/signals.$(OBJEXT) \
+	lib/list.$(OBJEXT) lib/nx-match.$(OBJEXT) \
+	lib/mac-learning.$(OBJEXT) lib/netdev.$(OBJEXT) \
+	lib/ofp.$(OBJEXT) lib/ofpbuf.$(OBJEXT) lib/pcap.$(OBJEXT) \
+	lib/poll-loop.$(OBJEXT) lib/port-array.$(OBJEXT) \
+	lib/process.$(OBJEXT) lib/queue.$(OBJEXT) lib/random.$(OBJEXT) \
+	lib/rconn.$(OBJEXT) lib/shash.$(OBJEXT) lib/signals.$(OBJEXT) \
 	lib/socket-util.$(OBJEXT) lib/stp.$(OBJEXT) lib/svec.$(OBJEXT) \
 	lib/tag.$(OBJEXT) lib/timeval.$(OBJEXT) lib/util.$(OBJEXT) \
 	lib/vconn-stream.$(OBJEXT) lib/vconn-tcp.$(OBJEXT) \
@@ -162,6 +166,9 @@ lib_libopenflow_a_OBJECTS = $(am_lib_libopenflow_a_OBJECTS) \
 oflib_exp_liboflib_exp_a_AR = $(AR) $(ARFLAGS)
 oflib_exp_liboflib_exp_a_LIBADD =
 am_oflib_exp_liboflib_exp_a_OBJECTS = oflib-exp/ofl-exp.$(OBJEXT) \
+	oflib-exp/ofl-exp-ext-messages.$(OBJEXT) \
+	oflib-exp/ofl-exp-ext-messages-unpack.$(OBJEXT) \
+	oflib-exp/ofl-exp-ext-messages-pack.$(OBJEXT) \
 	oflib-exp/ofl-exp-match.$(OBJEXT) \
 	oflib-exp/ofl-exp-nicira.$(OBJEXT) \
 	oflib-exp/ofl-exp-openflow.$(OBJEXT)
@@ -555,17 +562,18 @@ noinst_SCRIPTS = utilities/ofp-pki-cgi utilities/ofp-parse-leaks
 ro_c = echo '/* -*- mode: c; buffer-read-only: t -*- */'
 SUFFIXES = .in
 lib_libopenflow_a_SOURCES = lib/backtrace.c lib/backtrace.h \
-	lib/command-line.c lib/command-line.h lib/compiler.h \
-	lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
+	lib/byte-order.h lib/command-line.c lib/command-line.h \
+	lib/compiler.h lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
 	lib/dhcp-client.c lib/dhcp-client.h lib/dhcp.c lib/dhcp.h \
 	lib/dhparams.h lib/dirs.c lib/dirs.h lib/dynamic-string.c \
 	lib/dynamic-string.h lib/fatal-signal.c lib/fatal-signal.h \
 	lib/fault.c lib/fault.h lib/flex-array.h lib/flow.c lib/flow.h \
 	lib/hash.c lib/hash.h lib/hmap.c lib/hmap.h lib/leak-checker.c \
-	lib/leak-checker.h lib/list.c lib/list.h lib/mac-learning.c \
-	lib/mac-learning.h lib/netdev.c lib/netdev.h lib/ofp.c \
-	lib/ofp.h lib/ofpbuf.c lib/ofpbuf.h lib/packets.h lib/pcap.c \
-	lib/pcap.h lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
+	lib/leak-checker.h lib/list.c lib/list.h lib/nx-match.c \
+	lib/nx-match.h lib/mac-learning.c lib/mac-learning.h \
+	lib/netdev.c lib/netdev.h lib/ofp.c lib/ofp.h lib/ofpbuf.c \
+	lib/ofpbuf.h lib/packets.h lib/pcap.c lib/pcap.h \
+	lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
 	lib/port-array.h lib/process.c lib/process.h lib/queue.c \
 	lib/queue.h lib/random.c lib/random.h lib/rconn.c lib/rconn.h \
 	lib/sat-math.h lib/shash.c lib/shash.h lib/signals.c \
@@ -592,6 +600,10 @@ lib_libopenflow_a_LIBADD = oflib/ofl-actions.o \
                            oflib/ofl-print.o \
                            oflib-exp/ofl-exp.o \
                            oflib-exp/ofl-exp-nicira.o \
+			   oflib-exp/ofl-exp-match.o \
+			   oflib-exp/ofl-exp-ext-messages.o \
+			   oflib-exp/ofl-exp-ext-messages-pack.o \
+			   oflib-exp/ofl-exp-ext-messages-unpack.o \
                            oflib-exp/ofl-exp-openflow.o
 
 #nodist_lib_libopenflow_a_SOURCES = lib/dhparams.c
@@ -619,6 +631,10 @@ oflib_liboflib_a_SOURCES = \
 oflib_exp_liboflib_exp_a_SOURCES = \
 	oflib-exp/ofl-exp.c \
 	oflib-exp/ofl-exp.h \
+	oflib-exp/ofl-exp-ext-messages.c \
+	oflib-exp/ofl-exp-ext-messages-unpack.c \
+	oflib-exp/ofl-exp-ext-messages-pack.c \
+	oflib-exp/ofl-exp-ext-messages.h \
 	oflib-exp/ofl-exp-match.c \
 	oflib-exp/ofl-exp-match.h \
 	oflib-exp/ofl-exp-nicira.c \
@@ -817,6 +833,8 @@ lib/hmap.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
 lib/leak-checker.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/list.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
+lib/nx-match.$(OBJEXT): lib/$(am__dirstamp) \
+	lib/$(DEPDIR)/$(am__dirstamp)
 lib/mac-learning.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/netdev.$(OBJEXT): lib/$(am__dirstamp) \
@@ -877,6 +895,12 @@ oflib-exp/$(DEPDIR)/$(am__dirstamp):
 	@: > oflib-exp/$(DEPDIR)/$(am__dirstamp)
 oflib-exp/ofl-exp.$(OBJEXT): oflib-exp/$(am__dirstamp) \
 	oflib-exp/$(DEPDIR)/$(am__dirstamp)
+oflib-exp/ofl-exp-ext-messages.$(OBJEXT): oflib-exp/$(am__dirstamp) \
+	oflib-exp/$(DEPDIR)/$(am__dirstamp)
+oflib-exp/ofl-exp-ext-messages-unpack.$(OBJEXT):  \
+	oflib-exp/$(am__dirstamp) oflib-exp/$(DEPDIR)/$(am__dirstamp)
+oflib-exp/ofl-exp-ext-messages-pack.$(OBJEXT):  \
+	oflib-exp/$(am__dirstamp) oflib-exp/$(DEPDIR)/$(am__dirstamp)
 oflib-exp/ofl-exp-match.$(OBJEXT): oflib-exp/$(am__dirstamp) \
 	oflib-exp/$(DEPDIR)/$(am__dirstamp)
 oflib-exp/ofl-exp-nicira.$(OBJEXT): oflib-exp/$(am__dirstamp) \
@@ -1252,6 +1276,7 @@ mostlyclean-compile:
 	-rm -f lib/mac-learning.$(OBJEXT)
 	-rm -f lib/netdev.$(OBJEXT)
 	-rm -f lib/netlink.$(OBJEXT)
+	-rm -f lib/nx-match.$(OBJEXT)
 	-rm -f lib/ofp.$(OBJEXT)
 	-rm -f lib/ofpbuf.$(OBJEXT)
 	-rm -f lib/pcap.$(OBJEXT)
@@ -1277,6 +1302,9 @@ mostlyclean-compile:
 	-rm -f lib/vconn.$(OBJEXT)
 	-rm -f lib/vlog-socket.$(OBJEXT)
 	-rm -f lib/vlog.$(OBJEXT)
+	-rm -f oflib-exp/ofl-exp-ext-messages-pack.$(OBJEXT)
+	-rm -f oflib-exp/ofl-exp-ext-messages-unpack.$(OBJEXT)
+	-rm -f oflib-exp/ofl-exp-ext-messages.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-match.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-nicira.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-openflow.$(OBJEXT)
@@ -1363,6 +1391,7 @@ include lib/$(DEPDIR)/list.Po
 include lib/$(DEPDIR)/mac-learning.Po
 include lib/$(DEPDIR)/netdev.Po
 include lib/$(DEPDIR)/netlink.Po
+include lib/$(DEPDIR)/nx-match.Po
 include lib/$(DEPDIR)/ofp.Po
 include lib/$(DEPDIR)/ofpbuf.Po
 include lib/$(DEPDIR)/pcap.Po
@@ -1388,6 +1417,9 @@ include lib/$(DEPDIR)/vconn-unix.Po
 include lib/$(DEPDIR)/vconn.Po
 include lib/$(DEPDIR)/vlog-socket.Po
 include lib/$(DEPDIR)/vlog.Po
+include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages-pack.Po
+include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages-unpack.Po
+include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-match.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-nicira.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-openflow.Po

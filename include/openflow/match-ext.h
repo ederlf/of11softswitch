@@ -517,14 +517,14 @@
 #define NXM_METADATA       NXM_HEADER  (0x0000, 26, 8)
 #define NXM_METADATA_W     NXM_HEADER  (0x0000, 26, 8)
 
-#define EXTENDED_MATCH_ID 0x000007e1
+#define EXTENDED_MATCH_ID 0x00005678
 
 struct ofp_ext_header{
     struct ofp_header header;
-    uint16_t vendor;            /* EXTENDED_MATCH_ID. */
-    uint16_t subtype;           /* One of ofp_extension_commands */
+    uint32_t vendor;            /* EXTENDED_MATCH_ID. */
+    uint32_t subtype;           /* One of ofp_extension_commands */
 };
-OFP_ASSERT(sizeof(struct ofp_ext_header) == 12);
+OFP_ASSERT(sizeof(struct ofp_ext_header) == 16);
 
 
 
@@ -541,10 +541,11 @@ struct ext_match
 {
     struct ofp_match_header header;
     uint8_t pad[4];                 /* Align to 64 bits */
-    struct flex_array *match_fields; /* Match fields */   
+    struct flex_array match_fields; /* Match fields */   
 
 } ;
-OFP_ASSERT( sizeof(struct ext_match) == 12);
+
+OFP_ASSERT( sizeof(struct ext_match) == 16);
 
 /* ## --------------------- ## */
 /* ## Requests and replies. ## */
@@ -591,11 +592,11 @@ struct ofp_ext_flow_mod {
                                      indicates no restriction. */
     uint16_t flags;                /* One of OFPFF_*. */
     uint8_t pad[2];
-    struct ext_match match;	       /* Extended match */
+    struct ext_match *match;	       /* Extended match */
     struct ofp_instruction instructions[0]; /* Instruction set. */
    
 };
-OFP_ASSERT(sizeof(struct ofp_ext_flow_mod) == 64);
+OFP_ASSERT((sizeof(struct ofp_ext_flow_mod) - 4) == 56);
 
 /* NXT_FLOW_REMOVED (analogous to OFPT_FLOW_REMOVED). */
 struct ofp_ext_flow_removed {
@@ -614,7 +615,7 @@ struct ofp_ext_flow_removed {
     struct ext_match match;
    
 };
-OFP_ASSERT(sizeof(struct ofp_ext_flow_removed) == 64);
+OFP_ASSERT( sizeof(struct ofp_ext_flow_removed)  == 72);
 
 /* Nicira vendor stats request of type NXST_FLOW (analogous to OFPST_FLOW
  * request). */
@@ -636,7 +637,7 @@ struct ofp_ext_flow_stats_request {
     struct ext_match match;   /* Fields to match. */
    
 };
-OFP_ASSERT(sizeof(struct ofp_ext_flow_stats_request) == 36);
+OFP_ASSERT(sizeof(struct ofp_ext_flow_stats_request) == 40);
 
 /* Body for Nicira vendor stats reply of type NXST_FLOW (analogous to
  * OFPST_FLOW reply). */
@@ -655,11 +656,11 @@ struct ofp_ext_flow_stats {
     uint64_t cookie;          /* Opaque controller-issued identifier. */
     uint64_t packet_count;    /* Number of packets in flow. */
     uint64_t byte_count;      /* Number of bytes in flow. */
-    struct ext_match match;   /* Description of fields. */
+    struct ext_match *match;   /* Description of fields. */
     struct ofp_instruction instructions[0]; /* Instruction set. */
    
 };
-OFP_ASSERT(sizeof(struct ofp_ext_flow_stats) == 60);
+OFP_ASSERT((sizeof(struct ofp_ext_flow_stats)-4) == 48);
 
 /* Nicira vendor stats request of type NXST_AGGREGATE (analogous to
  * OFPST_AGGREGATE request). */
@@ -681,7 +682,7 @@ struct ofp_ext_aggregate_stats_request {
     struct ext_match match;   /* Fields to match. */
    
 };
-OFP_ASSERT(sizeof(struct ofp_ext_aggregate_stats_request) == 36);
+OFP_ASSERT(sizeof(struct ofp_ext_aggregate_stats_request) == 40);
 
 
 #endif /* openflow/match-ext.h */

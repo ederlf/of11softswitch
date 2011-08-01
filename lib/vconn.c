@@ -467,10 +467,10 @@ vconn_connect(struct vconn *vconn)
         case VCS_CONNECTED:
             return 0;
 
-        case VCS_SEND_ERROR:
+        case VCS_SEND_ERROR:{
             vcs_send_error(vconn);
             break;
-
+        }
         case VCS_DISCONNECTED:
             return vconn->error;
 
@@ -493,9 +493,10 @@ vconn_connect(struct vconn *vconn)
 int
 vconn_recv(struct vconn *vconn, struct ofpbuf **msgp)
 {
+  
     int retval = vconn_connect(vconn);
     if (!retval) {
-        retval = do_recv(vconn, msgp);
+         retval = do_recv(vconn, msgp);   
     }
     return retval;
 }
@@ -504,8 +505,7 @@ static int
 do_recv(struct vconn *vconn, struct ofpbuf **msgp)
 {
     int retval;
-
-again:
+again:        
     retval = (vconn->class->recv)(vconn, msgp);
     if (!retval) {
         struct ofp_header *oh;
@@ -513,11 +513,13 @@ again:
         if (VLOG_IS_DBG_ENABLED(LOG_MODULE)) {
             struct ofl_msg_header *msg;
             char *str;
+            
 
             if (!ofl_msg_unpack((*msgp)->data, (*msgp)->size, &msg, NULL/*xid*/, &ofl_exp)) {
                 str = ofl_msg_to_string(msg, &ofl_exp);
                 ofl_msg_free(msg, &ofl_exp);
             } else {
+                
                 struct ds string = DS_EMPTY_INITIALIZER;
                 ds_put_cstr(&string, "\n");
                 ds_put_hex_dump(&string, (*msgp)->data, MIN((*msgp)->size, 1024), 0, false);
@@ -527,7 +529,7 @@ again:
 
             free(str);
         }
-
+        
         oh = ofpbuf_at_assert(*msgp, 0, sizeof *oh);
         if (oh->version != vconn->version
             && oh->type != OFPT_HELLO

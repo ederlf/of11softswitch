@@ -217,13 +217,13 @@ dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
     ofpbufreq = ofpbuf_new(0);
     ofpbuf_use(ofpbufreq, bufreq, bufreq_size);
     ofpbuf_put_uninit(ofpbufreq, bufreq_size);
-    printf("Unpacking here");
     error = vconn_transact(vconn, ofpbufreq, &ofpbufrepl);
     if (error) {
         ofp_fatal(0, "Error during transaction.");
     }
     
     error = ofl_msg_unpack(ofpbufrepl->data, ofpbufrepl->size, repl, NULL /*xid_ptr*/, &dpctl_exp);
+
     if (error) {
         ofp_fatal(0, "Error unpacking reply.");
     }
@@ -266,7 +266,6 @@ dpctl_barrier(struct vconn *vconn) {
             {.type = OFPT_BARRIER_REQUEST};
 
     dpctl_transact(vconn, &req, &reply);
-
     if (reply->type == OFPT_BARRIER_REPLY) {
         str = ofl_msg_to_string(reply, &dpctl_exp);
         printf("\nOK.\n\n");
@@ -293,7 +292,6 @@ dpctl_send(struct vconn *vconn, struct ofl_msg_header *msg) {
     ofpbuf = ofpbuf_new(0);
     ofpbuf_use(ofpbuf, buf, buf_size);
     ofpbuf_put_uninit(ofpbuf, buf_size);
-    struct ofp_experimenter_header *exp = (struct ofp_experimenter_header*) ofpbuf->data;
     error = vconn_send_block(vconn, ofpbuf);
     if (error) {
         ofp_fatal(0, "Error during transaction.");
@@ -629,8 +627,10 @@ flow_mod(struct vconn *vconn, int argc, char *argv[]) {
             parse_inst(argv[2+i], &(msg.instructions[i]));
         }
     } else {
-        m->header.type = EXT_FLOW;
-        msg.match = (struct ofl_match_header*) m; 
+        //m->header.type = EXT_FLOW;
+        //m->header.length = 0;
+        //m->match_fields = 
+        //msg.match = (struct ofl_match_header*) m; 
        // make_all_match(&(msg.match));
     }
     dpctl_send_and_print(vconn, (struct ofl_msg_header *)&msg);

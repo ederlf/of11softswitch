@@ -51,8 +51,8 @@ int
 ofl_ext_message_unpack(struct ofp_header *oh, size_t *len, struct ofl_msg_experimenter **msg){
     
     struct ofp_ext_header *h; 
-    h = (struct ofl_ext_msg_header *) oh;
-    switch(ntohs(h->subtype)){
+    h = (struct ofp_ext_header *) oh;
+    switch(ntohl(h->subtype)){
         case(EXT_FLOW_MOD):{
 
             return ofl_ext_unpack_flow_mod(oh, len, msg);
@@ -74,16 +74,17 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     ofl_err error;
     size_t i;
 
-    //if (*len < (sizeof(struct ofp_ext_flow_mod) - sizeof(struct ext_match))) {
-     //   OFL_LOG_WARN(LOG_MODULE, "Received FLOW_MOD message has invalid length (%zu).", *len);
-    //    return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
-    //}
-    printf("len %d  flow_mod %d ext_match %d\n",*len, sizeof(struct ofp_ext_flow_mod) , sizeof(struct ext_match) );
-    *len -= (sizeof(struct ofp_ext_flow_mod) - sizeof(struct ext_match));
-     
+    if (*len < ((sizeof(struct ofp_ext_flow_mod)-4) - sizeof(struct ext_match))) {
+        OFL_LOG_WARN(LOG_MODULE, "Received FLOW_MOD message has invalid length (%zu).", *len);
+        return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
+    }
+
+    *len -= (sizeof(struct ofp_ext_flow_mod)-4) ;
     sm = (struct ofp_ext_flow_mod *)src;
     dm = (struct ofl_ext_flow_mod *)malloc(sizeof(struct ofl_ext_flow_mod));
-
+    
+    dm->header.type = ntohl(sm->header.subtype);
+    dm->header.header.experimenter_id =  ntohl(sm->header.vendor);
     dm->cookie =       ntoh64(sm->cookie);
     dm->cookie_mask =  ntoh64(sm->cookie_mask);
     dm->table_id =     sm->table_id;
@@ -95,20 +96,20 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     dm->out_port =     ntohl( sm->out_port);
     dm->out_group =    ntohl( sm->out_group);
     dm->flags =        ntohs( sm->flags);
-
-    error = ofl_exp_match_unpack(&(sm->match.header), len, &(dm->match));
-
-    if (error) {
-        free(dm);
-        printf("Entrei 1");
-        return error;
+    
+    if (sm->match != NULL){
+        error = ofl_exp_match_unpack(&(sm->match->header), len, &(dm->match));
+         if (error) {
+            free(dm);
+            return error;
+         }
     }
-
+    else dm->match = NULL;
+   
     error = ofl_utils_count_ofp_instructions(&(sm->instructions), *len, &dm->instructions_num);
     if (error) {
         ofl_exp_match_free(dm->match);
         free(dm);
-        printf("Entrei 2");
         return error;
     }
 
@@ -121,7 +122,6 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
                     ofl_structs_free_instruction, NULL);
             ofl_structs_free_match(dm->match, NULL);
             free(dm);
-            printf("Entrei 3");
             return error;
         }
         inst = (struct ofp_instruction *)((uint8_t *)inst + ntohs(inst->len));

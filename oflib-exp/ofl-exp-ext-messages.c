@@ -59,7 +59,8 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
         switch (exp->type){
             case (EXT_FLOW_MOD):{
                 size_t i;
-                struct ofl_ext_flow_mod *fm = (struct ofl_nx_flow_mod*) exp;
+                struct ofl_ext_flow_mod *fm = (struct ofl_ext_flow_mod*) exp;
+                fprintf(stream, "_flow_mod");
                 fprintf(stream, "{table=\"");
                 ofl_table_print(stream, fm->table_id);
                 fprintf(stream, "\", cmd=\"");
@@ -89,8 +90,19 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
         
         }
        
-    
     }
     fclose(stream);
     return str;
-} 
+}
+int
+ofl_ext_msg_free(struct ofl_msg_experimenter *msg){
+
+     if (msg->experimenter_id == EXTENDED_MATCH_ID) {
+         struct ofl_ext_msg_header *exp = (struct ofl_ext_msg_header *) msg;
+         free(exp);  
+         
+    }
+    else OFL_LOG_WARN(LOG_MODULE, "Trying to free non-Extended-Match Experimenter message.");
+    return 0;  
+}
+

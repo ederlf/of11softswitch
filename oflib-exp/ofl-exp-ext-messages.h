@@ -202,6 +202,8 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
 ofl_err
 ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_experimenter **msg);
 
+int 
+ofl_ext_msg_free(struct ofl_msg_experimenter *msg);
 
 
 #endif

@@ -42,14 +42,13 @@ OFL_LOG_INIT(LOG_MODULE)
 
 int
 ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
-
-
-    if(src->type == EXT_FLOW){      
+    
+    if(src->type == EXT_FLOW){     
         struct ofl_ext_match *m = (struct ofl_ext_match *) src;
         struct ext_match *dst_match = (struct ext_match *) dst;
         dst_match->header.type = htons(m->header.type);
         dst_match->header.length = htons(m->length);
-        memset(dst_match->pad, 0x00, 4);
+        memset(dst_match->pad, 0x00, 4); 
         dst_match->match_fields = m->match_fields;
      } else {
         OFL_LOG_WARN(LOG_MODULE, "Experimenter match is not NXFF_NXM");
@@ -63,12 +62,12 @@ ofl_exp_match_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match
 
     struct ofl_ext_match *m;
     struct ext_match *src_match = (struct ext_match*) src; 
-    
     if (*len < ntohs(src->length)) {
         OFL_LOG_WARN(LOG_MODULE, "Received match has invalid length (set to %u, but only %zu received).", 
 ntohs(src->length), *len);
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_LEN);
     }
+   
     m = (struct ofl_ext_match *) malloc(sizeof(struct ofl_ext_match));
     m->header.type = EXT_FLOW;
     m->length = *len;
@@ -92,8 +91,12 @@ ofl_exp_match_free(struct ofl_match_header *m){
 size_t  
 ofl_exp_match_length(struct ofl_match_header *m){
 
-
-
+    if(!m)
+        return 0;
+    else {
+        struct ofl_ext_match *match = (struct ofl_ext_match *) m;
+        return match->length;
+    }
 }
 
 char *  
@@ -101,5 +104,6 @@ ofl_exp_match_to_string(struct ofl_match_header *m){
     char *str;
     size_t str_size;
     FILE *stream = open_memstream(&str, &str_size);
+    
 
 }

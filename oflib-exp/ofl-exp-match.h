@@ -46,7 +46,7 @@ struct ofl_ext_match {
     struct ofl_match_header header;      /* One of OFPMT_* */
     uint16_t length;                    /* Length of ofp_match */
     uint32_t wildcards;                 /* Wildcard fields. */
-    struct flex_array *match_fields;    /* Match fields */   
+    struct flex_array match_fields;    /* Match fields */   
 };
 
 

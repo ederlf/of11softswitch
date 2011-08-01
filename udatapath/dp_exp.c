@@ -42,6 +42,7 @@
 #include "oflib-exp/ofl-exp-nicira.h"
 #include "openflow/openflow.h"
 #include "openflow/openflow-ext.h"
+#include "openflow/match-ext.h"
 #include "openflow/nicira-ext.h"
 #include "vlog.h"
 
@@ -103,8 +104,14 @@ dp_exp_message(struct datapath *dp,
                 }
             }
         }
+	case (EXTENDED_MATCH_ID):{
+	   printf("I understand now\n");
+	   return 0;
+       break;
+	}
 
         default: {
+	     VLOG_WARN_RL(LOG_MODULE, &rl, "Trying to handle unknown experimenter id (%u).", msg->experimenter_id);
             return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_EXPERIMENTER);
         }
     }

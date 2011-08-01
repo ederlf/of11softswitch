@@ -20,32 +20,28 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include "openvswitch/types.h"
+#include "ofpbuf.h"
+#include "openflow/match-ext.h"
 
-struct ds;
-struct flow;
-struct ofpbuf;
-
+//typedef unsigned int __attribute__((bitwise)) flow_wildcards_t;
 
 /* Nicira Extended Match (NXM) flexible flow match helper functions.
  *
- * See include/openflow/nicira-ext.h for NXM specification.
+ * See include/openflow/ext-match.h for NXM specification.
  */
 
-int nx_pull_match(struct ofpbuf *, unsigned int match_len, uint16_t priority);
+int ext_pull_match(struct ofpbuf *, unsigned int match_len, uint16_t priority);
 
-int nx_put_match(struct ofpbuf *);
+int ext_put_match(struct ext_match *, struct flow * flow);
 
-char *nx_match_to_string(const uint8_t *, unsigned int match_len);
-int nx_match_from_string(const char *, struct ofpbuf *);
+char *ext_match_to_string(const uint8_t *, unsigned int match_len);
+int ext_match_from_string(const char *, struct ofpbuf *);
 
-int nxm_field_bytes(uint32_t header);
-int nxm_field_bits(uint32_t header);
+int
+ext_field_bytes(uint32_t header);
 
-const char *nxm_parse_field_bits(const char *s,
-                                 uint32_t *headerp, int *ofsp, int *n_bitsp);
-void nxm_format_field_bits(struct ds *, uint32_t header, int ofs, int n_bits);
-
+int
+nxm_field_bits(uint32_t header);
 
 /* Upper bound on the length of an nx_match.  The longest nx_match (assuming
  * we implement 4 registers) would be:
