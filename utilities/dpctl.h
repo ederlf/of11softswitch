@@ -120,6 +120,9 @@ static struct names32 wildcard_names[] = {
         {OFPFW_TP_DST,      "tp_dst"},
         {OFPFW_MPLS_LABEL,  "mpls_label"},
         {OFPFW_MPLS_TC,     "mpls_tc"},
+        {OFPFW_ARP_SHA,     "arp_sha"},     
+        {OFPFW_ARP_THA,     "arp_tha"}, 
+        {OFPFW_ND_TARGET    "nd_target"},
         {OFPFW_ALL,         "all"}
 };
 
@@ -193,6 +196,8 @@ static struct names16 action_names[] = {
 #define MATCH_MPLS_TC       "mpls_tc"
 #define MATCH_METADATA      "meta"
 #define MATCH_METADATA_MASK "meta_mask"
+#define MATCH_NW_SRC_IPV6   "nw_src_ipv6"
+#define MATCH_NW_DST_IPV6   "nw_dst_ipv6"
 
 
 #define GROUP_MOD_COMMAND "cmd"

@@ -107,7 +107,7 @@ static uint8_t mask_all[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 
 static void
-parse_flow_mod_args(char *str, struct ofl_ext_flow_mod *req);
+parse_flow_mod_args(char *str,  struct ofl_msg_flow_mod  *req);
 
 static void
 parse_group_mod_args(char *str, struct ofl_msg_group_mod *req);
@@ -120,6 +120,9 @@ parse_flow_stat_args(char *str, struct ofl_msg_stats_request_flow *req);
 
 static void
 parse_match(char *str, struct ofl_match_header **match);
+
+static void
+parse_ext_match(char *str, struct ofl_match_header **match);
 
 static void
 parse_inst(char *str, struct ofl_instruction_header **inst);
@@ -573,11 +576,47 @@ set_config(struct vconn *vconn, int argc UNUSED, char *argv[]) {
 
 
 static void
-flow_mod(struct vconn *vconn, int argc, char *argv[]) {
+do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
     
-    
-    struct ofl_ext_flow_mod msg = 
-     {{{    {.type = OFPT_EXPERIMENTER  },
+   if (!preferred_flow_format){
+        struct ofl_msg_flow_mod msg =
+            {{.type = OFPT_FLOW_MOD},
+             .cookie = 0x0000000000000000ULL,
+             .cookie_mask = 0x0000000000000000ULL,
+             .table_id = 0xff,
+             .command = OFPFC_ADD,
+             .idle_timeout = OFP_FLOW_PERMANENT,
+             .hard_timeout = OFP_FLOW_PERMANENT,
+             .priority = OFP_DEFAULT_PRIORITY,
+             .buffer_id = 0xffffffff,
+             .out_port = OFPP_ANY,
+             .out_group = OFPG_ANY,
+             .flags = 0x0000,
+             .match = NULL,
+             .instructions_num = 0,
+             .instructions = NULL};
+        parse_flow_mod_args(argv[0], &msg);
+
+        if (argc > 1) {
+            size_t i;
+            size_t inst_num = argc - 2;
+            parse_match(argv[1], &(msg.match));
+
+            msg.instructions_num = inst_num;
+            msg.instructions = xmalloc(sizeof(struct ofl_instruction_header *) * inst_num);
+
+            for (i=0; i < inst_num; i++) {
+                parse_inst(argv[2+i], &(msg.instructions[i]));
+            }
+        } else {
+            make_all_match(&(msg.match));
+        }  
+         dpctl_send_and_print(vconn, (struct ofl_msg_header *)&msg);
+   }
+   else /*Extended match flow format */
+      if(preferred_flow_format == EXT_FLOW){
+        struct ofl_ext_flow_mod msg = 
+        {{{  {.type = OFPT_EXPERIMENTER  },
              .experimenter_id = EXTENDED_MATCH_ID},
              .type =  EXT_FLOW_MOD},
              .cookie = 0x0000000000000000ULL,
@@ -594,46 +633,20 @@ flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .match = NULL,
              .instructions_num = 0,
              .instructions = NULL}; 
-   
-   /* struct ofl_msg_flow_mod msg =
-            {{.type = OFPT_FLOW_MOD},
-             .cookie = 0x0000000000000000ULL,
-             .cookie_mask = 0x0000000000000000ULL,
-             .table_id = 0xff,
-             .command = OFPFC_ADD,
-             .idle_timeout = OFP_FLOW_PERMANENT,
-             .hard_timeout = OFP_FLOW_PERMANENT,
-             .priority = OFP_DEFAULT_PRIORITY,
-             .buffer_id = 0xffffffff,
-             .out_port = OFPP_ANY,
-             .out_group = OFPG_ANY,
-             .flags = 0x0000,
-             .match = NULL,
-             .instructions_num = 0,
-             .instructions = NULL};*/
-    struct ofl_ext_match *m = malloc(sizeof( struct ofl_ext_match));
-   
-    parse_flow_mod_args(argv[0], &msg);
-
-    if (argc > 1) {
-        size_t i;
-        size_t inst_num = argc - 2;
-        //parse_match(argv[1], &(msg.match));
-
-        msg.instructions_num = inst_num;
-        msg.instructions = xmalloc(sizeof(struct ofl_instruction_header *) * inst_num);
-
-        for (i=0; i < inst_num; i++) {
-            parse_inst(argv[2+i], &(msg.instructions[i]));
-        }
-    } else {
-        //m->header.type = EXT_FLOW;
-        //m->header.length = 0;
-        //m->match_fields = 
-        //msg.match = (struct ofl_match_header*) m; 
-       // make_all_match(&(msg.match));
+         
+       struct ofl_ext_match *m = malloc(sizeof( struct ofl_ext_match));
+       parse_flow_mod_args(argv[0], &msg);
+       
+        if (argc > 1){
+            parse_ext_match(argv[1], &(msg.match));
+       }
+       printf("Nothing to do Doc!\n");
+            //m->header.type = EXT_FLOW;
+            //m->length = 0;
+            //m->match_fields = 
+            // msg.match = (struct ofl_match_header*) m;
     }
-    dpctl_send_and_print(vconn, (struct ofl_msg_header *)&msg);
+    
 }
 
 
@@ -817,7 +830,7 @@ static struct command all_commands[] = {
     {"stats-group-desc", 0, 1, stats_group_desc },
 
     {"set-config", 1, 1, set_config},
-    {"flow-mod", 1, 7/*+1 for each inst type*/, flow_mod },
+    {"flow-mod", 1, 7/*+1 for each inst type*/, do_flow_mod },
     {"group-mod", 1, UINT8_MAX, group_mod },
     {"port-mod", 1, 1, port_mod },
     {"table-mod", 1, 1, table_mod },
@@ -1109,7 +1122,7 @@ parse_match(char *str, struct ofl_match_header **match) {
             }
             continue;
         }
-        if (strncmp(token, MATCH_DL_TYPE KEY_VAL, strlen(MATCH_DL_TYPE KEY_VAL)) == 0) {
+        if (strncmp(token, MATCH_DL_TYPE KEY_VAL, strlen(MATCH_DL_TYPE KEY_VAL)) == 0 ) {
             if (parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &(m->dl_type))) {
                 ofp_fatal(0, "Error parsing dl_type: %s.", token);
             }
@@ -1193,6 +1206,12 @@ parse_match(char *str, struct ofl_match_header **match) {
     (*match) = (struct ofl_match_header *)m;
 }
 
+static void
+parse_ext_match(char *str, struct ofl_match_header **match) {
+
+
+
+}
 
 static void
 make_all_match(struct ofl_match_header **match) {
@@ -1535,7 +1554,7 @@ parse_flow_stat_args(char *str, struct ofl_msg_stats_request_flow *req) {
 
 
 static void
-parse_flow_mod_args(char *str, struct ofl_ext_flow_mod *req) {
+parse_flow_mod_args(char *str,  struct ofl_msg_flow_mod *req) {
     char *token, *saveptr = NULL;
 
     for (token = strtok_r(str, KEY_SEP, &saveptr); token != NULL; token = strtok_r(NULL, KEY_SEP, &saveptr)) {
@@ -1828,10 +1847,18 @@ parse16(char *str, struct names16 *names, size_t names_num, uint16_t max, uint16
             return 0;
         }
     }
-
-    if ((max > 0) && (sscanf(str, "%"SCNu16"", val)) == 1 && (*val <= max)) {
-        return 0;
+    
+    /* Checks if the passed value is hexadecimal. */
+    if(str[1] == 'x'){
+        if ((max > 0) && (sscanf(str, "%"SCNx16"", val))  == 1 && (*val <= max)) {
+            return 0;
+        }
     }
+    else {
+         if ((max > 0) && (sscanf(str, "%"SCNu16"", val))  == 1 && (*val <= max)) {
+            return 0;
+         }
+    }          
     return -1;
 }
 
