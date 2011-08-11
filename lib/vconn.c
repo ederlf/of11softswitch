@@ -505,7 +505,8 @@ static int
 do_recv(struct vconn *vconn, struct ofpbuf **msgp)
 {
     int retval;
-again:        
+again:      
+    
     retval = (vconn->class->recv)(vconn, msgp);
     if (!retval) {
         struct ofp_header *oh;
@@ -514,12 +515,11 @@ again:
             struct ofl_msg_header *msg;
             char *str;
             
-
             if (!ofl_msg_unpack((*msgp)->data, (*msgp)->size, &msg, NULL/*xid*/, &ofl_exp)) {
                 str = ofl_msg_to_string(msg, &ofl_exp);
-                ofl_msg_free(msg, &ofl_exp);
-            } else {
                 
+                ofl_msg_free(msg, &ofl_exp);
+            } else {         
                 struct ds string = DS_EMPTY_INITIALIZER;
                 ds_put_cstr(&string, "\n");
                 ds_put_hex_dump(&string, (*msgp)->data, MIN((*msgp)->size, 1024), 0, false);
@@ -596,14 +596,15 @@ static int
 do_send(struct vconn *vconn, struct ofpbuf *buf)
 {
     int retval;
-
     assert(buf->size >= sizeof(struct ofp_header));
     assert(((struct ofp_header *) buf->data)->length == htons(buf->size));
     if (!VLOG_IS_DBG_ENABLED(LOG_MODULE)) {
         retval = (vconn->class->send)(vconn, buf);
     } else {
+        
         struct ofl_msg_header *msg;
         char *str;
+    
         if (!ofl_msg_unpack(buf->data, buf->size, &msg, NULL/*xid*/, &ofl_exp)){
             str = ofl_msg_to_string(msg, &ofl_exp);
             ofl_msg_free(msg, &ofl_exp);

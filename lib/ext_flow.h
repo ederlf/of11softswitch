@@ -30,14 +30,65 @@
  * advertising or publicity pertaining to the Software or any
  * derivatives without specific, written prior permission.
  */
-#ifndef HASH_H
-#define HASH_H 1
+#ifndef FLOW_H
+#define FLOW_H 1
 
-#include <stddef.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
+#include "hash.h"
+#include "list.h"
+#include "util.h"
 
-uint32_t hash_words(const uint32_t *, size_t n_word, uint32_t basis);
-uint32_t hash_bytes(const void *, size_t n_bytes, uint32_t basis);
+struct ofp_match;
+struct ofpbuf;
 
 
-#endif /* hash.h */
+union value{
+
+    uint8_t  size8;
+    uint16_t size16;
+    uint32_t size32;
+    uint64_t size64;
+};
+
+/* Identification data for a flow. */
+
+struct ext_flow {
+
+    struct list node;
+    union value value;
+    union value mask;
+    char *name;
+    
+};
+
+int flow_extract(struct ofpbuf *, uint32_t in_port, struct flow *);
+void flow_fill_match(struct ofp_match *, const struct flow *,
+                     uint32_t wildcards);
+void flow_print(FILE *, const struct flow *);
+static inline int flow_compare(const struct flow *, const struct flow *);
+static inline bool flow_equal(const struct flow *, const struct flow *);
+static inline size_t flow_hash(const struct flow *, uint32_t basis);
+
+static inline int
+flow_compare(const struct flow *a, const struct flow *b)
+{
+    return memcmp(a, b, sizeof *a);
+}
+
+static inline bool
+flow_equal(const struct flow *a, const struct flow *b)
+{
+    return !flow_compare(a, b);
+}
+
+static inline size_t
+flow_hash(const struct flow *flow, uint32_t basis)
+{
+    BUILD_ASSERT_DECL(!(sizeof *flow % sizeof(uint32_t)));
+    return hash_words((const uint32_t *) flow,
+                      sizeof *flow / sizeof(uint32_t), basis);
+}
+
+#endif /* flow.h */

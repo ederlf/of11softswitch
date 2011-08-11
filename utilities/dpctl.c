@@ -44,6 +44,8 @@
 #include <sys/time.h>
 
 #include "dpctl.h"
+#include "nx-match.h"
+#include "flex-array.h"
 #include "oflib/ofl-messages.h"
 #include "oflib/ofl-structs.h"
 #include "oflib/ofl-actions.h"
@@ -119,10 +121,7 @@ static void
 parse_flow_stat_args(char *str, struct ofl_msg_stats_request_flow *req);
 
 static void
-parse_match(char *str, struct ofl_match_header **match);
-
-static void
-parse_ext_match(char *str, struct ofl_match_header **match);
+parse_match(char *str, struct ofl_match_header **match, int flow_format);
 
 static void
 parse_inst(char *str, struct ofl_instruction_header **inst);
@@ -148,6 +147,7 @@ make_all_match(struct ofl_match_header **match);
 
 static int
 parse_port(char *str, uint32_t *port);
+
 
 static int
 parse_queue(char *str, uint32_t *port);
@@ -204,7 +204,6 @@ static struct ofl_exp dpctl_exp =
          .stats = NULL,
          .msg   = &dpctl_exp_msg};
 
-
 static void
 dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
                               struct ofl_msg_header **repl) {
@@ -212,6 +211,7 @@ dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
     uint8_t *bufreq;
     size_t bufreq_size;
     int error;
+     
     error = ofl_msg_pack(req, XID, &bufreq, &bufreq_size, &dpctl_exp);
     if (error) {
         ofp_fatal(0, "Error packing request.");
@@ -244,11 +244,12 @@ dpctl_transact_and_print(struct vconn *vconn, struct ofl_msg_header *req,
                                         struct ofl_msg_header **repl) {
     struct ofl_msg_header *reply;
     char *str;
+    
     str = ofl_msg_to_string(req, &dpctl_exp);
     printf("\nSENDING:\n%s\n\n", str);
     free(str);
     dpctl_transact(vconn, req, &reply);
-
+    
     str = ofl_msg_to_string(reply, &dpctl_exp);
     printf("\nRECEIVED:\n%s\n\n", str);
     free(str);
@@ -267,7 +268,6 @@ dpctl_barrier(struct vconn *vconn) {
 
     struct ofl_msg_header req =
             {.type = OFPT_BARRIER_REQUEST};
-
     dpctl_transact(vconn, &req, &reply);
     if (reply->type == OFPT_BARRIER_REPLY) {
         str = ofl_msg_to_string(reply, &dpctl_exp);
@@ -287,7 +287,6 @@ dpctl_send(struct vconn *vconn, struct ofl_msg_header *msg) {
     uint8_t *buf;
     size_t buf_size;
     int error;
-     
     error = ofl_msg_pack(msg, XID, &buf, &buf_size, &dpctl_exp);
     if (error) {
         ofp_fatal(0, "Error packing request.");
@@ -295,6 +294,8 @@ dpctl_send(struct vconn *vconn, struct ofl_msg_header *msg) {
     ofpbuf = ofpbuf_new(0);
     ofpbuf_use(ofpbuf, buf, buf_size);
     ofpbuf_put_uninit(ofpbuf, buf_size);
+    struct ofp_ext_flow_mod *fm = (struct ofp_ext_flow_mod *) ofpbuf->data;
+    struct ext_match *m = (struct ofp_ext_match *) fm->match;
     error = vconn_send_block(vconn, ofpbuf);
     if (error) {
         ofp_fatal(0, "Error during transaction.");
@@ -309,7 +310,6 @@ dpctl_send_and_print(struct vconn *vconn, struct ofl_msg_header *msg) {
     str = ofl_msg_to_string(msg, &dpctl_exp);
     printf("\nSENDING:\n%s\n\n", str);
     free(str);
-   
     dpctl_send(vconn, msg);
 }
 
@@ -445,7 +445,7 @@ stats_flow(struct vconn *vconn, int argc, char *argv[]) {
         parse_flow_stat_args(argv[0], &req);
     }
     if (argc > 1) {
-        parse_match(argv[1], &(req.match));
+        parse_match(argv[1], &(req.match), preferred_flow_format);
     } else {
         make_all_match(&(req.match));
     }
@@ -469,7 +469,7 @@ stats_aggr(struct vconn *vconn, int argc, char *argv[]) {
         parse_flow_stat_args(argv[0], &req);
     }
     if (argc > 1) {
-        parse_match(argv[1], &(req.match));
+        parse_match(argv[1], &(req.match), preferred_flow_format);
     } else {
         make_all_match(&(req.match));
     }
@@ -595,13 +595,13 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .match = NULL,
              .instructions_num = 0,
              .instructions = NULL};
+              
         parse_flow_mod_args(argv[0], &msg);
-
+       
         if (argc > 1) {
             size_t i;
             size_t inst_num = argc - 2;
-            parse_match(argv[1], &(msg.match));
-
+            parse_match(argv[1], &(msg.match), preferred_flow_format);
             msg.instructions_num = inst_num;
             msg.instructions = xmalloc(sizeof(struct ofl_instruction_header *) * inst_num);
 
@@ -614,7 +614,7 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
          dpctl_send_and_print(vconn, (struct ofl_msg_header *)&msg);
    }
    else /*Extended match flow format */
-      if(preferred_flow_format == EXT_FLOW){
+      if(preferred_flow_format == EXT_MATCH){
         struct ofl_ext_flow_mod msg = 
         {{{  {.type = OFPT_EXPERIMENTER  },
              .experimenter_id = EXTENDED_MATCH_ID},
@@ -632,19 +632,27 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .flags = 0x0000,
              .match = NULL,
              .instructions_num = 0,
-             .instructions = NULL}; 
-         
-       struct ofl_ext_match *m = malloc(sizeof( struct ofl_ext_match));
-       parse_flow_mod_args(argv[0], &msg);
-       
+             .instructions = NULL};  
+        
+        parse_flow_mod_args(argv[0], &msg);
         if (argc > 1){
-            parse_ext_match(argv[1], &(msg.match));
+            size_t i;
+            size_t inst_num = argc - 2;
+            
+            printf("Parsing\n");
+            parse_match(argv[1], &(msg.match), preferred_flow_format);
+            printf("Parsed\n");
+        
+            msg.instructions_num = inst_num;
+            msg.instructions = xmalloc(sizeof(struct ofl_instruction_header *) * inst_num);
+
+            for (i=0; i < inst_num; i++) {
+                parse_inst(argv[2+i], &(msg.instructions[i]));
+            }
        }
-       printf("Nothing to do Doc!\n");
-            //m->header.type = EXT_FLOW;
-            //m->length = 0;
-            //m->match_fields = 
-            // msg.match = (struct ofl_match_header*) m;
+       
+       dpctl_send_and_print(vconn, (struct ofl_msg_header *)&msg);
+       
     }
     
 }
@@ -1054,164 +1062,315 @@ parse_wildcards(char *str, uint32_t *wc) {
 
 
 static void
-parse_match(char *str, struct ofl_match_header **match) {
+parse_match(char *str, struct ofl_match_header **match, int flow_format) {
     // TODO parse shortcuts: "ip", "arp", "icmp", "tcp", "udp"
+    
+    /*check for the flow_format */
     char *token, *saveptr = NULL;
-    struct ofl_match_standard *m = xmalloc(sizeof(struct ofl_match_standard));
-    memset(m, 0x00, OFPMT_STANDARD_LENGTH);
-    m->header.type = OFPMT_STANDARD;
-
+    //TODO find a better way to do it
+    struct ofl_match_standard *m; 
+    struct ofl_ext_match *ext_m;
+    
+    
+    if (!flow_format){
+        m = xmalloc(sizeof(struct ofl_match_standard));
+        memset(m, 0x00, OFPMT_STANDARD_LENGTH);
+        m->header.type = OFPMT_STANDARD;
+    }
+    else {   
+        ext_m = xmalloc(sizeof(struct ofl_ext_match) +10);
+        
+        ext_m->header.type = EXT_MATCH;
+        ext_m->header.length = sizeof(struct ofl_ext_match);
+        flex_array_init(&(ext_m->match_fields));
+    }
     for (token = strtok_r(str, KEY_SEP, &saveptr); token != NULL; token = strtok_r(NULL, KEY_SEP, &saveptr)) {
         if (strncmp(token, MATCH_IN_PORT KEY_VAL, strlen(MATCH_IN_PORT KEY_VAL)) == 0) {
-            if (parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &(m->in_port))) {
-                ofp_fatal(0, "Error parsing port: %s.", token);
-            }
+            if(!flow_format){
+                if (parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &(m->in_port))) {
+                    ofp_fatal(0, "Error parsing port: %s.", token);
+                }
+            }    
+            else {
+                uint32_t port;
+               // ext_m = xrealloc(ext_m, 8);
+                parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &port);
+                ext_put_32(&ext_m->match_fields, NXM_OF_IN_PORT, port);
+                uint8_t * x = ext_m->match_fields.entries;
+                ext_m->header.length += 8;
+            
+            }/*mount the extended entry */    
             continue;
         }
         if (strncmp(token, MATCH_WILDCARDS KEY_VAL, strlen(MATCH_WILDCARDS KEY_VAL)) == 0) {
-            if (parse_wildcards(token + strlen(MATCH_WILDCARDS KEY_VAL), &(m->wildcards))) {
-                ofp_fatal(0, "Error parsing wildcards: %s.", token);
+            if(!flow_format){
+                if (parse_wildcards(token + strlen(MATCH_WILDCARDS KEY_VAL), &(m->wildcards))) {
+                    ofp_fatal(0, "Error parsing wildcards: %s.", token);
+                }
             }
+            else {
+            
+            
+            }/*mount the extended entry */    
             continue;
         }
         if (strncmp(token, MATCH_DL_SRC KEY_VAL, strlen(MATCH_DL_SRC KEY_VAL)) == 0) {
-            if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), m->dl_src)) {
-                ofp_fatal(0, "Error parsing dl_src: %s.", token);
+            if(!flow_format){
+                if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), m->dl_src)) {
+                    ofp_fatal(0, "Error parsing dl_src: %s.", token);
+                }
             }
+            else {
+            
+            
+            }    
             continue;
         }
         if (strncmp(token, MATCH_DL_SRC KEY_VAL, strlen(MATCH_DL_SRC KEY_VAL)) == 0) {
-            if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), m->dl_src)) {
-                ofp_fatal(0, "Error parsing dl_src: %s.", token);
+            if(!flow_format){
+                if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), m->dl_src)) {
+                    ofp_fatal(0, "Error parsing dl_src: %s.", token);
+                }
             }
+            else {
+            
+            
+            }   
             continue;
         }
         if (strncmp(token, MATCH_DL_SRC_MASK KEY_VAL, strlen(MATCH_DL_SRC_MASK KEY_VAL)) == 0) {
-            if (parse_dl_addr(token + strlen(MATCH_DL_SRC_MASK KEY_VAL), m->dl_src_mask)) {
-                ofp_fatal(0, "Error parsing dl_src_mask: %s.", token);
+            if(!flow_format){
+                if (parse_dl_addr(token + strlen(MATCH_DL_SRC_MASK KEY_VAL), m->dl_src_mask)) {
+                    ofp_fatal(0, "Error parsing dl_src_mask: %s.", token);
+                }
             }
+            else {
+            
+            
+            }    
             continue;
         }
         if (strncmp(token, MATCH_DL_DST KEY_VAL, strlen(MATCH_DL_DST KEY_VAL)) == 0) {
-            if (parse_dl_addr(token + strlen(MATCH_DL_DST KEY_VAL), m->dl_dst)) {
-                ofp_fatal(0, "Error parsing dl_dst: %s.", token);
+            if(!flow_format){ 
+                if (parse_dl_addr(token + strlen(MATCH_DL_DST KEY_VAL), m->dl_dst)) {
+                    ofp_fatal(0, "Error parsing dl_dst: %s.", token);
+                }
             }
+            else {
+            
+            
+            }    
             continue;
         }
         if (strncmp(token, MATCH_DL_DST_MASK KEY_VAL, strlen(MATCH_DL_DST_MASK KEY_VAL)) == 0) {
-            if (parse_dl_addr(token + strlen(MATCH_DL_DST_MASK KEY_VAL), m->dl_dst_mask)) {
-                ofp_fatal(0, "Error parsing dl_dst_mask: %s.", token);
+            if(!flow_format){ 
+                if (parse_dl_addr(token + strlen(MATCH_DL_DST_MASK KEY_VAL), m->dl_dst_mask)) {
+                    ofp_fatal(0, "Error parsing dl_dst_mask: %s.", token);
+                }
             }
+            else {
+            
+            }    
             continue;
         }
         if (strncmp(token, MATCH_DL_VLAN KEY_VAL, strlen(MATCH_DL_VLAN KEY_VAL)) == 0) {
-            if (parse_dl_addr(token + strlen(MATCH_DL_DST_MASK KEY_VAL), m->dl_dst_mask)) {
-                ofp_fatal(0, "Error parsing dl_dst_mask: %s.", token);
+            if(!flow_format){ 
+                if (parse_dl_addr(token + strlen(MATCH_DL_DST_MASK KEY_VAL), m->dl_dst_mask)) {
+                    ofp_fatal(0, "Error parsing dl_dst_mask: %s.", token);
+                }
             }
+            else {
+            
+            
+            }    
             continue;
         }
         if (strncmp(token, MATCH_DL_VLAN KEY_VAL, strlen(MATCH_DL_VLAN KEY_VAL)) == 0) {
-            if (parse_vlan_vid(token + strlen(MATCH_DL_VLAN KEY_VAL), &(m->dl_vlan))) {
-                ofp_fatal(0, "Error parsing vlan label: %s.", token);
+            if(!flow_format){
+                if (parse_vlan_vid(token + strlen(MATCH_DL_VLAN KEY_VAL), &(m->dl_vlan))) {
+                    ofp_fatal(0, "Error parsing vlan label: %s.", token);
+                }
             }
+            else {
+            
+            
+            }    
             continue;
         }
         if (strncmp(token, MATCH_DL_VLAN_PCP KEY_VAL, strlen(MATCH_DL_VLAN_PCP KEY_VAL)) == 0) {
-            if (parse8(token + strlen(MATCH_DL_VLAN_PCP KEY_VAL), NULL, 0, 0x7, &(m->dl_vlan_pcp))) {
-                ofp_fatal(0, "Error parsing vlan pcp: %s.", token);
+            if(!flow_format){ 
+                if (parse8(token + strlen(MATCH_DL_VLAN_PCP KEY_VAL), NULL, 0, 0x7, &(m->dl_vlan_pcp))) {
+                    ofp_fatal(0, "Error parsing vlan pcp: %s.", token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_DL_TYPE KEY_VAL, strlen(MATCH_DL_TYPE KEY_VAL)) == 0 ) {
-            if (parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &(m->dl_type))) {
-                ofp_fatal(0, "Error parsing dl_type: %s.", token);
+            if(!flow_format){
+                if (parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &(m->dl_type))) {
+                    ofp_fatal(0, "Error parsing dl_type: %s.", token);
+                }
             }
+            else {
+            
+            
+            } 
             continue;
         }
         if (strncmp(token, MATCH_NW_TOS KEY_VAL, strlen(MATCH_NW_TOS KEY_VAL)) == 0) {
-            if (parse8(token + strlen(MATCH_NW_TOS KEY_VAL), NULL, 0, 0x3f, &(m->nw_tos))) {
-                ofp_fatal(0, "Error parsing nw_tos: %s.", token);
+            if(!flow_format){ 
+                if (parse8(token + strlen(MATCH_NW_TOS KEY_VAL), NULL, 0, 0x3f, &(m->nw_tos))) {
+                    ofp_fatal(0, "Error parsing nw_tos: %s.", token);
+                }
+            }
+            else {
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_NW_PROTO KEY_VAL, strlen(MATCH_NW_PROTO KEY_VAL)) == 0) {
-            if (parse8(token + strlen(MATCH_NW_PROTO KEY_VAL), NULL, 0, 0xff, &(m->nw_proto))) {
-                ofp_fatal(0, "Error parsing nw_proto: %s.", token);
+            if(!flow_format){ 
+                if (parse8(token + strlen(MATCH_NW_PROTO KEY_VAL), NULL, 0, 0xff, &(m->nw_proto))) {
+                    ofp_fatal(0, "Error parsing nw_proto: %s.", token);
+                }
+            }
+            else {
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_NW_SRC KEY_VAL, strlen(MATCH_NW_SRC KEY_VAL)) == 0) {
-            if (parse_nw_addr(token + strlen(MATCH_NW_SRC KEY_VAL), &(m->nw_src))) {
-                ofp_fatal(0, "Error parsing nw_src: %s.", token);
+            if(!flow_format){ 
+                if (parse_nw_addr(token + strlen(MATCH_NW_SRC KEY_VAL), &(m->nw_src))) {
+                    ofp_fatal(0, "Error parsing nw_src: %s.", token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_NW_SRC_MASK KEY_VAL, strlen(MATCH_NW_SRC_MASK KEY_VAL)) == 0) {
-            if (parse_nw_addr(token + strlen(MATCH_NW_SRC_MASK KEY_VAL), &(m->nw_src_mask))) {
-                ofp_fatal(0, "Error parsing nw_src_mask: %s.", token);
+            if(!flow_format){ 
+                if (parse_nw_addr(token + strlen(MATCH_NW_SRC_MASK KEY_VAL), &(m->nw_src_mask))) {
+                    ofp_fatal(0, "Error parsing nw_src_mask: %s.", token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_NW_DST KEY_VAL, strlen(MATCH_NW_DST KEY_VAL)) == 0) {
-            if (parse_nw_addr(token + strlen(MATCH_NW_DST KEY_VAL), &(m->nw_dst))) {
-                ofp_fatal(0, "Error parsing nw_dst: %s.", token);
+            if(!flow_format){ 
+                if (parse_nw_addr(token + strlen(MATCH_NW_DST KEY_VAL), &(m->nw_dst))) {
+                    ofp_fatal(0, "Error parsing nw_dst: %s.", token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_NW_DST_MASK KEY_VAL, strlen(MATCH_NW_DST_MASK KEY_VAL)) == 0) {
-            if (parse_nw_addr(token + strlen(MATCH_NW_DST_MASK KEY_VAL), &(m->nw_dst_mask))) {
-                ofp_fatal(0, "Error parsing nw_dst_mask: %s.", token);
+            if(!flow_format){ 
+                if (parse_nw_addr(token + strlen(MATCH_NW_DST_MASK KEY_VAL), &(m->nw_dst_mask))) {
+                    ofp_fatal(0, "Error parsing nw_dst_mask: %s.", token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_TP_SRC KEY_VAL, strlen(MATCH_TP_SRC KEY_VAL)) == 0) {
-            if (parse16(token + strlen(MATCH_TP_SRC KEY_VAL), NULL, 0, 0xffff, &(m->tp_src))) {
-                ofp_fatal(0, "Error parsing tp_src: %s.", token);
+            if(!flow_format){ 
+                if (parse16(token + strlen(MATCH_TP_SRC KEY_VAL), NULL, 0, 0xffff, &(m->tp_src))) {
+                    ofp_fatal(0, "Error parsing tp_src: %s.", token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_TP_DST KEY_VAL, strlen(MATCH_TP_DST KEY_VAL)) == 0) {
-            if (parse16(token + strlen(MATCH_TP_DST KEY_VAL), NULL, 0, 0xffff, &(m->tp_dst))) {
-                ofp_fatal(0, "Error parsing tp_dst: %s.", token);
+            if(!flow_format){ 
+                if (parse16(token + strlen(MATCH_TP_DST KEY_VAL), NULL, 0, 0xffff, &(m->tp_dst))) {
+                    ofp_fatal(0, "Error parsing tp_dst: %s.", token);
+                }
+            }
+            else {
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_MPLS_LABEL KEY_VAL, strlen(MATCH_MPLS_LABEL KEY_VAL)) == 0) {
-            if (parse32(token + strlen(MATCH_MPLS_LABEL KEY_VAL), NULL, 0, 0xfffff, &(m->mpls_label))) {
-                ofp_fatal(0, "Error parsing mpls_label: %s.", token);
+            if(!flow_format){ 
+                if (parse32(token + strlen(MATCH_MPLS_LABEL KEY_VAL), NULL, 0, 0xfffff, &(m->mpls_label))) {
+                    ofp_fatal(0, "Error parsing mpls_label: %s.", token);
+                }
+            }
+            else {
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_MPLS_TC KEY_VAL, strlen(MATCH_MPLS_TC KEY_VAL)) == 0) {
-            if (parse8(token + strlen(MATCH_MPLS_TC KEY_VAL), NULL, 0, 0x07, &(m->mpls_tc))) {
-                ofp_fatal(0, "Error parsing mpls_tc: %s.", token);
+            if(!flow_format){ 
+                if (parse8(token + strlen(MATCH_MPLS_TC KEY_VAL), NULL, 0, 0x07, &(m->mpls_tc))) {
+                    ofp_fatal(0, "Error parsing mpls_tc: %s.", token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_METADATA KEY_VAL, strlen(MATCH_METADATA KEY_VAL)) == 0) {
-            if (sscanf(token, MATCH_METADATA KEY_VAL "0x%"SCNx64"", &(m->metadata)) != 1) {
-                ofp_fatal(0, "Error parsing %s: %s.", MATCH_METADATA, token);
+            if(!flow_format){ 
+                if (sscanf(token, MATCH_METADATA KEY_VAL "0x%"SCNx64"", &(m->metadata)) != 1) {
+                    ofp_fatal(0, "Error parsing %s: %s.", MATCH_METADATA, token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         if (strncmp(token, MATCH_METADATA_MASK KEY_VAL, strlen(MATCH_METADATA_MASK KEY_VAL)) == 0) {
-            if (sscanf(token, MATCH_METADATA_MASK KEY_VAL "0x%"SCNx64"", &(m->metadata_mask)) != 1) {
-                ofp_fatal(0, "Error parsing %s: %s.", MATCH_METADATA_MASK, token);
+            if(!flow_format){ 
+                if (sscanf(token, MATCH_METADATA_MASK KEY_VAL "0x%"SCNx64"", &(m->metadata_mask)) != 1) {
+                    ofp_fatal(0, "Error parsing %s: %s.", MATCH_METADATA_MASK, token);
+                }
+            }
+            else {
+            
+            
             }
             continue;
         }
         ofp_fatal(0, "Error parsing match arg: %s.", token);
     }
+    if (!preferred_flow_format){
+        (*match) = (struct ofl_match_header *)m;
+    }
+    else {
+        (*match) = (struct ofl_match_header *)ext_m;  
+    }
+}   
 
-    (*match) = (struct ofl_match_header *)m;
-}
-
-static void
-parse_ext_match(char *str, struct ofl_match_header **match) {
-
-
-
-}
 
 static void
 make_all_match(struct ofl_match_header **match) {
@@ -1435,8 +1594,6 @@ parse_actions(char *str, size_t *acts_num, struct ofl_action_header ***acts) {
     }
 
 }
-
-
 
 static void
 parse_inst(char *str, struct ofl_instruction_header **inst) {
@@ -1776,6 +1933,7 @@ parse_port(char *str, uint32_t *port) {
     return parse32(str, port_names, NUM_ELEMS(port_names), OFPP_MAX, port);
 }
 
+
 static int
 parse_queue(char *str, uint32_t *port) {
     return parse32(str, queue_names, NUM_ELEMS(queue_names), 0xfffffffe, port);
@@ -1887,7 +2045,7 @@ ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format)
         return "openflow10";
     case NXFF_TUN_ID_FROM_COOKIE:
         return "tun_id_from_cookie";
-    case EXT_FLOW:
+    case EXT_MATCH:
         return "nxm";
     default:
         NOT_REACHED();
@@ -1899,7 +2057,7 @@ ofputil_flow_format_from_string(const char *s)
 {
     return (!strcmp(s, "openflow11") ? OFPMT_STANDARD
             : !strcmp(s, "tun_id_from_cookie") ? NXFF_TUN_ID_FROM_COOKIE
-            : !strcmp(s, "nxm") ? EXT_FLOW
+            : !strcmp(s, "nxm") ? EXT_MATCH
             : -1);
 }
 

@@ -36,6 +36,8 @@
 
 #include "ofl-exp-match.h"
 #include "../oflib/ofl-log.h"
+#include "../oflib/ofl-print.h"
+#include "nx-match.h"
 
 #define LOG_MODULE ofl_exp
 OFL_LOG_INIT(LOG_MODULE)
@@ -43,13 +45,13 @@ OFL_LOG_INIT(LOG_MODULE)
 int
 ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
     
-    if(src->type == EXT_FLOW){     
+    if(src->type == EXT_MATCH){   
         struct ofl_ext_match *m = (struct ofl_ext_match *) src;
         struct ext_match *dst_match = (struct ext_match *) dst;
         dst_match->header.type = htons(m->header.type);
-        dst_match->header.length = htons(m->length);
+        dst_match->header.length = htons(m->header.length);
         memset(dst_match->pad, 0x00, 4); 
-        dst_match->match_fields = m->match_fields;
+        memcpy(&dst_match->match_fields , &m->match_fields, m->match_fields.size + sizeof(m->match_fields));
      } else {
         OFL_LOG_WARN(LOG_MODULE, "Experimenter match is not NXFF_NXM");
         return -1;
@@ -68,10 +70,15 @@ ntohs(src->length), *len);
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_LEN);
     }
    
-    m = (struct ofl_ext_match *) malloc(sizeof(struct ofl_ext_match));
-    m->header.type = EXT_FLOW;
-    m->length = *len;
-    m->match_fields = src_match->match_fields;
+   
+   
+    m = (struct ofl_ext_match *) malloc(sizeof(struct ofl_ext_match) + src_match->match_fields.size);
+    m->header.type = ntohs(src_match->header.type);
+    m->header.length = ntohs(src_match->header.length);
+    printf("SIZE %d\n",src_match->match_fields.size + sizeof(src_match->match_fields));
+    memcpy(&m->match_fields , &src_match->match_fields, sizeof(src_match->match_fields) + src_match->match_fields.size );
+    printf("M->header->type %d\n", m->match_fields.entries[3] );
+    *len -=  m->header.length;
 
     *dst = &m->header;
     return 0;
@@ -79,7 +86,7 @@ ntohs(src->length), *len);
 
 int     
 ofl_exp_match_free(struct ofl_match_header *m){
-    if (m->type == EXT_FLOW) {
+    if (m->type == EXT_MATCH) {
             free(m);
     }
     else {
@@ -95,7 +102,7 @@ ofl_exp_match_length(struct ofl_match_header *m){
         return 0;
     else {
         struct ofl_ext_match *match = (struct ofl_ext_match *) m;
-        return match->length;
+        return match->header.length;
     }
 }
 
@@ -104,6 +111,48 @@ ofl_exp_match_to_string(struct ofl_match_header *m){
     char *str;
     size_t str_size;
     FILE *stream = open_memstream(&str, &str_size);
-    
+    ofl_exp_match_print(stream, m);
+    fclose(stream);
+    return str;
+}
 
+
+void
+ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
+
+
+    switch (match->type) {
+        case (EXT_MATCH): {
+            int i;
+            uint32_t header;
+            unsigned length;
+            
+            struct ofl_ext_match *m = (struct ofl_ext_match *)match;
+            uint8_t *p = m->match_fields.entries;
+            printf("p->entries %d\n", p[3]);       
+            fprintf(stream, "extended_match{");
+            for (i = 0; i < m->match_fields.total; i++){
+                header = ext_entry_ok(p,m->match_fields.size);
+                length = NXM_LENGTH(header);
+                switch(header){
+                    case (NXM_OF_IN_PORT):{
+                        uint32_t *value = p + 4;
+                        fprintf(stream, "port=\"");   
+                        ofl_port_print(stream, *value);
+                        fprintf(stream, "\"");
+                        p += length; 
+                        break;
+                    }
+                    case (NXM_OF_ETH_SRC): {
+                        
+                    
+                        break;
+                    } 
+                    
+                
+                }
+            
+            }
+        }     
+    }
 }

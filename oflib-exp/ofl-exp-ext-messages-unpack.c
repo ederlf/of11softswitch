@@ -73,14 +73,15 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     struct ofp_instruction *inst;
     ofl_err error;
     size_t i;
-
-    if (*len < ((sizeof(struct ofp_ext_flow_mod)-4) - sizeof(struct ext_match))) {
+    
+    sm = (struct ofp_ext_flow_mod *)src;
+    if (*len < ((sizeof(struct ofp_ext_flow_mod)-4) - sizeof(struct ext_match) )) {
         OFL_LOG_WARN(LOG_MODULE, "Received FLOW_MOD message has invalid length (%zu).", *len);
         return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
     }
 
     *len -= (sizeof(struct ofp_ext_flow_mod)-4) ;
-    sm = (struct ofp_ext_flow_mod *)src;
+    
     dm = (struct ofl_ext_flow_mod *)malloc(sizeof(struct ofl_ext_flow_mod));
     
     dm->header.type = ntohl(sm->header.subtype);

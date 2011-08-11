@@ -3,6 +3,8 @@ noinst_LIBRARIES += lib/libopenflow.a
 lib_libopenflow_a_SOURCES = \
 	lib/backtrace.c \
 	lib/backtrace.h \
+	lib/bj_hash.c \
+	lib/bj_hash.h \
 	lib/byte-order.h \
 	lib/command-line.c \
 	lib/command-line.h \
@@ -24,6 +26,7 @@ lib_libopenflow_a_SOURCES = \
 	lib/fatal-signal.h \
 	lib/fault.c \
 	lib/fault.h \
+	lib/flex-array.c \
 	lib/flex-array.h \
 	lib/flow.c \
 	lib/flow.h \

@@ -49,8 +49,6 @@ struct names32 {
     char      *name;
 };
 
-
-
 static struct names32 port_names[] = {
         {OFPP_IN_PORT,    "in_port"},
         {OFPP_TABLE,      "table"},
@@ -61,6 +59,7 @@ static struct names32 port_names[] = {
         {OFPP_LOCAL,      "local"},
         {OFPP_ANY,        "any"}
 };
+
 
 static struct names32 queue_names[] = {
         {OFPQ_ALL, "all"}
@@ -122,7 +121,7 @@ static struct names32 wildcard_names[] = {
         {OFPFW_MPLS_TC,     "mpls_tc"},
         {OFPFW_ARP_SHA,     "arp_sha"},     
         {OFPFW_ARP_THA,     "arp_tha"}, 
-        {OFPFW_ND_TARGET    "nd_target"},
+        {OFPFW_ND_TARGET,    "nd_target"},
         {OFPFW_ALL,         "all"}
 };
 

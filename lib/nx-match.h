@@ -37,11 +37,19 @@ int ext_put_match(struct ext_match *, struct flow * flow);
 char *ext_match_to_string(const uint8_t *, unsigned int match_len);
 int ext_match_from_string(const char *, struct ofpbuf *);
 
+uint32_t ext_entry_ok(const void *, unsigned int );
+
 int
 ext_field_bytes(uint32_t header);
 
 int
 nxm_field_bits(uint32_t header);
+
+void
+ext_put_header(struct flex_array *f, uint32_t header);
+
+void
+ext_put_32(struct flex_array *f, uint32_t header, uint32_t value);
 
 /* Upper bound on the length of an nx_match.  The longest nx_match (assuming
  * we implement 4 registers) would be:

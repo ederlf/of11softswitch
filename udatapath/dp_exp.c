@@ -40,6 +40,7 @@
 #include "oflib/ofl-messages.h"
 #include "oflib-exp/ofl-exp-openflow.h"
 #include "oflib-exp/ofl-exp-nicira.h"
+#include "oflib-exp/ofl-exp-ext-messages.h"
 #include "openflow/openflow.h"
 #include "openflow/openflow-ext.h"
 #include "openflow/match-ext.h"
@@ -104,11 +105,19 @@ dp_exp_message(struct datapath *dp,
                 }
             }
         }
-	case (EXTENDED_MATCH_ID):{
-	   printf("I understand now\n");
-	   return 0;
-       break;
-	}
+	    case (EXTENDED_MATCH_ID):{
+	        struct ofl_ext_msg_header *exp = (struct ofl_ext_msg_header *)msg;
+	        
+	        switch (exp->type){
+	            case (EXT_FLOW_MOD): {
+	                /*Return the Extended Flow Mod handler */
+	                return 0;
+	            }
+	        
+	        }
+	        printf("I understand now\n");
+	        return 0;
+	   }
 
         default: {
 	     VLOG_WARN_RL(LOG_MODULE, &rl, "Trying to handle unknown experimenter id (%u).", msg->experimenter_id);

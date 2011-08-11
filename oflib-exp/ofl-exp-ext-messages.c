@@ -53,7 +53,6 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
     char *str;
     size_t str_size;
     FILE *stream = open_memstream(&str, &str_size);
-    
     if (msg->experimenter_id == EXTENDED_MATCH_ID) {
         struct ofl_ext_msg_header *exp = (struct ofl_ext_msg_header *) msg;
         switch (exp->type){
@@ -75,7 +74,8 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
                 fprintf(stream, "\", group=\"");
                 ofl_group_print(stream, fm->out_group);
                 fprintf(stream, "\", flags=\"0x%"PRIx16"\", match=",fm->flags);
-                //ofl_structs_match_print(stream, fm->match, exp);
+                if(fm->match != NULL)
+                    ofl_exp_match_print(stream, fm->match);
                 fprintf(stream, ", insts=[");
 
                 for(i=0; i<fm->instructions_num; i++) {
@@ -83,7 +83,7 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
                     if (i < fm->instructions_num - 1) { fprintf(stream, ", "); }
                 }
                 fprintf(stream, "]}");
-                
+                  
                 break;
             }
         
