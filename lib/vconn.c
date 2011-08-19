@@ -505,12 +505,10 @@ static int
 do_recv(struct vconn *vconn, struct ofpbuf **msgp)
 {
     int retval;
-again:      
-    
+again:    
     retval = (vconn->class->recv)(vconn, msgp);
     if (!retval) {
         struct ofp_header *oh;
-
         if (VLOG_IS_DBG_ENABLED(LOG_MODULE)) {
             struct ofl_msg_header *msg;
             char *str;
@@ -538,6 +536,7 @@ again:
             && oh->type != OFPT_ECHO_REPLY
             && oh->type != OFPT_EXPERIMENTER)
         {
+            
             if (vconn->version < 0) {
                 if (oh->type == OFPT_PACKET_IN
                     || oh->type == OFPT_FLOW_REMOVED
@@ -604,7 +603,7 @@ do_send(struct vconn *vconn, struct ofpbuf *buf)
         
         struct ofl_msg_header *msg;
         char *str;
-    
+
         if (!ofl_msg_unpack(buf->data, buf->size, &msg, NULL/*xid*/, &ofl_exp)){
             str = ofl_msg_to_string(msg, &ofl_exp);
             ofl_msg_free(msg, &ofl_exp);
@@ -614,8 +613,8 @@ do_send(struct vconn *vconn, struct ofpbuf *buf)
             ds_put_hex_dump(&string, buf->data, MIN(buf->size, 1024), 0, false);
             str = ds_cstr(&string);
         }
-
         retval = (vconn->class->send)(vconn, buf);
+
         if (retval != EAGAIN) {
             VLOG_DBG_RL(LOG_MODULE, &rl, "%s: sent (%s): %s",
                         vconn->name, strerror(retval), str);

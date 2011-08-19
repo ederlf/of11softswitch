@@ -4,21 +4,23 @@ lib/leak-checker.o: lib/leak-checker.c config.h lib/leak-checker.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-32.h /usr/include/bits/types.h \
  /usr/include/bits/typesizes.h /usr/include/time.h \
- /usr/lib/gcc/i686-linux-gnu/4.4.5/include/stddef.h /usr/include/endian.h \
- /usr/include/bits/endian.h /usr/include/bits/byteswap.h \
- /usr/include/sys/select.h /usr/include/bits/select.h \
- /usr/include/bits/sigset.h /usr/include/bits/time.h \
- /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h \
- /usr/include/inttypes.h /usr/include/stdint.h /usr/include/bits/wchar.h \
- lib/backtrace.h lib/vlog.h \
- /usr/lib/gcc/i686-linux-gnu/4.4.5/include-fixed/limits.h \
- /usr/lib/gcc/i686-linux-gnu/4.4.5/include-fixed/syslimits.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stddef.h \
+ /usr/include/endian.h /usr/include/bits/endian.h \
+ /usr/include/bits/byteswap.h /usr/include/sys/select.h \
+ /usr/include/bits/select.h /usr/include/bits/sigset.h \
+ /usr/include/bits/time.h /usr/include/sys/sysmacros.h \
+ /usr/include/bits/pthreadtypes.h /usr/include/inttypes.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdint.h \
+ /usr/include/stdint.h /usr/include/bits/wchar.h lib/backtrace.h \
+ lib/vlog.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/limits.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/syslimits.h \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
  /usr/include/bits/posix2_lim.h /usr/include/bits/xopen_lim.h \
  /usr/include/bits/stdio_lim.h \
- /usr/lib/gcc/i686-linux-gnu/4.4.5/include/stdarg.h \
- /usr/lib/gcc/i686-linux-gnu/4.4.5/include/stdbool.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdarg.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdbool.h \
  /usr/include/xlocale.h lib/util.h /usr/include/stdio.h \
  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
  /usr/include/bits/sys_errlist.h /usr/include/bits/stdio.h \
@@ -29,7 +31,7 @@ lib/leak-checker.o: lib/leak-checker.c config.h lib/leak-checker.h \
  secchan/vlog-modules.def udatapath/vlog-modules.def \
  utilities/vlog-modules.def /usr/include/errno.h \
  /usr/include/bits/errno.h /usr/include/linux/errno.h \
- /usr/include/asm/errno.h /usr/include/asm-generic/errno.h \
+ /usr/include/i386-linux-gnu/asm/errno.h /usr/include/asm-generic/errno.h \
  /usr/include/asm-generic/errno-base.h /usr/include/fcntl.h \
  /usr/include/bits/fcntl.h /usr/include/bits/uio.h \
  /usr/include/bits/stat.h /usr/include/bits/fcntl2.h \
@@ -59,7 +61,7 @@ lib/leak-checker.h:
 
 /usr/include/time.h:
 
-/usr/lib/gcc/i686-linux-gnu/4.4.5/include/stddef.h:
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stddef.h:
 
 /usr/include/endian.h:
 
@@ -81,6 +83,8 @@ lib/leak-checker.h:
 
 /usr/include/inttypes.h:
 
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdint.h:
+
 /usr/include/stdint.h:
 
 /usr/include/bits/wchar.h:
@@ -89,9 +93,9 @@ lib/backtrace.h:
 
 lib/vlog.h:
 
-/usr/lib/gcc/i686-linux-gnu/4.4.5/include-fixed/limits.h:
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/limits.h:
 
-/usr/lib/gcc/i686-linux-gnu/4.4.5/include-fixed/syslimits.h:
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/syslimits.h:
 
 /usr/include/limits.h:
 
@@ -107,9 +111,9 @@ lib/vlog.h:
 
 /usr/include/bits/stdio_lim.h:
 
-/usr/lib/gcc/i686-linux-gnu/4.4.5/include/stdarg.h:
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdarg.h:
 
-/usr/lib/gcc/i686-linux-gnu/4.4.5/include/stdbool.h:
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdbool.h:
 
 /usr/include/xlocale.h:
 
@@ -159,7 +163,7 @@ utilities/vlog-modules.def:
 
 /usr/include/linux/errno.h:
 
-/usr/include/asm/errno.h:
+/usr/include/i386-linux-gnu/asm/errno.h:
 
 /usr/include/asm-generic/errno.h:
 

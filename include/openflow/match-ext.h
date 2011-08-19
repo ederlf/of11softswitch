@@ -248,7 +248,7 @@
  * Format: 16-bit integer in network byte order.
  *
  * Masking: Not maskable. */
-#define NXM_OF_IN_PORT    NXM_HEADER  (0x0000,  0, 2)
+#define NXM_OF_IN_PORT    NXM_HEADER  (0x0000,  0, 4)
 
 /* Source or destination address in Ethernet header.
  *
@@ -442,6 +442,18 @@
 #define NXM_OF_ARP_TPA    NXM_HEADER  (0x0000, 19, 4)
 #define NXM_OF_ARP_TPA_W  NXM_HEADER_W(0x0000, 19, 4)
 
+/* For an Ethernet+IP ARP packet, the source or target hardware address
+ * in the ARP header.  Always 0 otherwise.
+ *
+ * Prereqs: NXM_OF_ETH_TYPE must match 0x0806 exactly.
+ *
+ * Format: 48-bit Ethernet MAC address.
+ *
+ * Masking: Not maskable. */
+#define NXM_NX_ARP_SHA    NXM_HEADER  (0x0001, 20, 6)
+#define NXM_NX_ARP_THA    NXM_HEADER  (0x0001, 21, 6)
+
+
 /* The source or destination address in the IPv6 header.
  *
  * Prereqs: NXM_OF_ETH_TYPE must match 0x86dd exactly.
@@ -450,10 +462,10 @@
  *
  * Masking: Only CIDR masks are allowed, that is, masks that consist of N
  *   high-order bits set to 1 and the other 128-N bits set to 0. */
-#define NXM_NX_IPV6_SRC    NXM_HEADER  (0x0000, 20, 16)
-#define NXM_NX_IPV6_SRC_W  NXM_HEADER_W(0x0000, 20, 16)
-#define NXM_NX_IPV6_DST    NXM_HEADER  (0x0000, 21, 16)
-#define NXM_NX_IPV6_DST_W  NXM_HEADER_W(0x0000, 21, 16)
+#define NXM_NX_IPV6_SRC    NXM_HEADER  (0x0000, 22, 16)
+#define NXM_NX_IPV6_SRC_W  NXM_HEADER_W(0x0000, 22, 16)
+#define NXM_NX_IPV6_DST    NXM_HEADER  (0x0000, 23, 16)
+#define NXM_NX_IPV6_DST_W  NXM_HEADER_W(0x0000, 23, 16)
 
 /* The type or code in the ICMPv6 header.
  *
@@ -464,8 +476,8 @@
  * Format: 8-bit integer.
  *
  * Masking: Maskable. */
-#define NXM_NX_ICMPV6_TYPE NXM_HEADER  (0x0000, 22, 1)
-#define NXM_NX_ICMPV6_CODE NXM_HEADER  (0x0000, 23, 1)
+#define NXM_NX_ICMPV6_TYPE NXM_HEADER  (0x0000, 24, 1)
+#define NXM_NX_ICMPV6_CODE NXM_HEADER  (0x0000, 25, 1)
 
 /* The target address in an IPv6 Neighbor Discovery message.
  *
@@ -477,7 +489,7 @@
  * Format: 128-bit IPv6 address.
  *
  * Masking: Not maskable. */
-#define NXM_NX_ND_TARGET   NXM_HEADER  (0x0000, 24, 16)
+#define NXM_NX_ND_TARGET   NXM_HEADER  (0x0000, 26, 16)
 
 /* The source link-layer address option in an IPv6 Neighbor Discovery
  * message.
@@ -490,7 +502,7 @@
  * Format: 48-bit Ethernet MAC address.
  *
  * Masking: Not maskable. */
-#define NXM_NX_ND_SLL      NXM_HEADER  (0x0000, 24, 6)
+#define NXM_NX_ND_SLL      NXM_HEADER  (0x0000, 27, 6)
 
 /* The target link-layer address option in an IPv6 Neighbor Discovery
  * message.
@@ -503,9 +515,8 @@
  * Format: 48-bit Ethernet MAC address.
  *
  * Masking: Not maskable. */
-#define NXM_NX_ND_TLL      NXM_HEADER  (0x0000, 25, 6)
+#define NXM_NX_ND_TLL      NXM_HEADER  (0x0000, 28, 6)
 
-#define NXM_NX_ND_SLL      NXM_HEADER  (0x0000, 24, 6)
 
 /* Metadata passed between tables
  * 
@@ -514,8 +525,8 @@
  * Format: 64-bit Ethernet MAC address.
  *
  * Masking: Not maskable. */
-#define NXM_METADATA       NXM_HEADER  (0x0000, 26, 8)
-#define NXM_METADATA_W     NXM_HEADER  (0x0000, 26, 8)
+#define NXM_METADATA       NXM_HEADER  (0x0000, 29, 8)
+#define NXM_METADATA_W     NXM_HEADER  (0x0000, 30, 8)
 
 #define EXTENDED_MATCH_ID 0x00005678
 
@@ -525,7 +536,6 @@ struct ofp_ext_header{
     uint32_t subtype;           /* One of ofp_extension_commands */
 };
 OFP_ASSERT(sizeof(struct ofp_ext_header) == 16);
-
 
 
 /* Values for the 'subtype' member of struct nicira_header. */
@@ -555,7 +565,7 @@ enum ofp_ext_flow_format {
     NXFF_OPENFLOW10 = OFPMT_STANDARD,         /* Standard OpenFlow 1.0 compatible. */
     NXFF_TUN_ID_FROM_COOKIE = 1, /* OpenFlow 1.0, plus obtain tunnel ID from
                                   * cookie. */
-    EXT_FLOW = 2                 /* Nicira extended match. */
+    EXT_MATCH= 2                 /* Nicira extended match. */
 };
 
 /* EXT_SET_FLOW_FORMAT request. */
@@ -565,6 +575,7 @@ struct ofp_ext_set_flow_format {
     uint32_t format;            /* One of NXFF_*. */
 };
 OFP_ASSERT(sizeof(struct ofp_ext_set_flow_format) == 16);
+
 
 /* NXT_FLOW_MOD (analogous to OFPT_FLOW_MOD). */
 struct ofp_ext_flow_mod {
@@ -596,7 +607,6 @@ struct ofp_ext_flow_mod {
     struct ofp_instruction instructions[0]; /* Instruction set. */
    
 };
-OFP_ASSERT((sizeof(struct ofp_ext_flow_mod) - 4) == 56);
 
 /* NXT_FLOW_REMOVED (analogous to OFPT_FLOW_REMOVED). */
 struct ofp_ext_flow_removed {
@@ -615,7 +625,6 @@ struct ofp_ext_flow_removed {
     struct ext_match match;
    
 };
-OFP_ASSERT( sizeof(struct ofp_ext_flow_removed)  == 72);
 
 /* Nicira vendor stats request of type NXST_FLOW (analogous to OFPST_FLOW
  * request). */
@@ -637,7 +646,6 @@ struct ofp_ext_flow_stats_request {
     struct ext_match match;   /* Fields to match. */
    
 };
-OFP_ASSERT(sizeof(struct ofp_ext_flow_stats_request) == 40);
 
 /* Body for Nicira vendor stats reply of type NXST_FLOW (analogous to
  * OFPST_FLOW reply). */
@@ -660,7 +668,6 @@ struct ofp_ext_flow_stats {
     struct ofp_instruction instructions[0]; /* Instruction set. */
    
 };
-OFP_ASSERT((sizeof(struct ofp_ext_flow_stats)-4) == 48);
 
 /* Nicira vendor stats request of type NXST_AGGREGATE (analogous to
  * OFPST_AGGREGATE request). */
@@ -682,7 +689,6 @@ struct ofp_ext_aggregate_stats_request {
     struct ext_match match;   /* Fields to match. */
    
 };
-OFP_ASSERT(sizeof(struct ofp_ext_aggregate_stats_request) == 40);
 
 
 #endif /* openflow/match-ext.h */

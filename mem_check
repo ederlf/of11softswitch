@@ -1,0 +1,11 @@
+Parsing
+Parsed
+What I have to do Doc?Print!
+p->entries 4
+
+SENDING:
+exp_flow_mod{table="100", cmd="add", cookie="0x0", mask="0x1", idle="0", hard="0", prio="32768", buf="none", port="any", group="any", flags="0x0", match=extended_match{port="1", insts=[apply{acts=[out{port="2"}]}]}
+
+SIZE 16
+What I have to do Doc?Print!
+p->entries 0

@@ -110,42 +110,44 @@ lib_libopenflow_a_DEPENDENCIES = oflib/ofl-actions.o \
 	oflib-exp/ofl-exp-ext-messages-unpack.o \
 	oflib-exp/ofl-exp-openflow.o
 am__lib_libopenflow_a_SOURCES_DIST = lib/backtrace.c lib/backtrace.h \
-	lib/byte-order.h lib/command-line.c lib/command-line.h \
-	lib/compiler.h lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
+	lib/bj_hash.c lib/bj_hash.h lib/byte-order.h \
+	lib/command-line.c lib/command-line.h lib/compiler.h \
+	lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
 	lib/dhcp-client.c lib/dhcp-client.h lib/dhcp.c lib/dhcp.h \
 	lib/dhparams.h lib/dirs.c lib/dirs.h lib/dynamic-string.c \
 	lib/dynamic-string.h lib/fatal-signal.c lib/fatal-signal.h \
-	lib/fault.c lib/fault.h lib/flex-array.h lib/flow.c lib/flow.h \
-	lib/hash.c lib/hash.h lib/hmap.c lib/hmap.h lib/leak-checker.c \
-	lib/leak-checker.h lib/list.c lib/list.h lib/nx-match.c \
-	lib/nx-match.h lib/mac-learning.c lib/mac-learning.h \
-	lib/netdev.c lib/netdev.h lib/ofp.c lib/ofp.h lib/ofpbuf.c \
-	lib/ofpbuf.h lib/packets.h lib/pcap.c lib/pcap.h \
-	lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
+	lib/fault.c lib/fault.h lib/flex-array.c lib/flex-array.h \
+	lib/flow.c lib/flow.h lib/hash.c lib/hash.h lib/hmap.c \
+	lib/hmap.h lib/leak-checker.c lib/leak-checker.h lib/list.c \
+	lib/list.h lib/nx-match.c lib/nx-match.h lib/mac-learning.c \
+	lib/mac-learning.h lib/netdev.c lib/netdev.h lib/ofp.c \
+	lib/ofp.h lib/ofpbuf.c lib/ofpbuf.h lib/packets.h lib/pcap.c \
+	lib/pcap.h lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
 	lib/port-array.h lib/process.c lib/process.h lib/queue.c \
 	lib/queue.h lib/random.c lib/random.h lib/rconn.c lib/rconn.h \
 	lib/sat-math.h lib/shash.c lib/shash.h lib/signals.c \
 	lib/signals.h lib/socket-util.c lib/socket-util.h lib/stp.c \
 	lib/stp.h lib/svec.c lib/svec.h lib/tag.c lib/tag.h \
 	lib/timeval.c lib/timeval.h lib/type-props.h lib/util.c \
-	lib/util.h lib/vconn-provider.h lib/vconn-ssl.h \
-	lib/vconn-stream.c lib/vconn-stream.h lib/vconn-tcp.c \
-	lib/vconn-unix.c lib/vconn.c lib/vconn.h lib/vlog-modules.def \
-	lib/vlog-socket.c lib/vlog-socket.h lib/vlog.c lib/vlog.h \
-	lib/xtoxll.h lib/dpif.c lib/dpif.h lib/netlink-protocol.h \
-	lib/netlink.c lib/netlink.h lib/vconn-netlink.c \
-	lib/vconn-ssl.c
+	lib/util.h lib/unaligned.h lib/vconn-provider.h \
+	lib/vconn-ssl.h lib/vconn-stream.c lib/vconn-stream.h \
+	lib/vconn-tcp.c lib/vconn-unix.c lib/vconn.c lib/vconn.h \
+	lib/vlog-modules.def lib/vlog-socket.c lib/vlog-socket.h \
+	lib/vlog.c lib/vlog.h lib/xtoxll.h lib/dpif.c lib/dpif.h \
+	lib/netlink-protocol.h lib/netlink.c lib/netlink.h \
+	lib/vconn-netlink.c lib/vconn-ssl.c
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = lib/dpif.$(OBJEXT) \
 	lib/netlink.$(OBJEXT) \
 	lib/vconn-netlink.$(OBJEXT)
 #am__objects_2 = lib/vconn-ssl.$(OBJEXT)
 am_lib_libopenflow_a_OBJECTS = lib/backtrace.$(OBJEXT) \
-	lib/command-line.$(OBJEXT) lib/csum.$(OBJEXT) \
-	lib/daemon.$(OBJEXT) lib/dhcp-client.$(OBJEXT) \
-	lib/dhcp.$(OBJEXT) lib/dirs.$(OBJEXT) \
-	lib/dynamic-string.$(OBJEXT) lib/fatal-signal.$(OBJEXT) \
-	lib/fault.$(OBJEXT) lib/flow.$(OBJEXT) lib/hash.$(OBJEXT) \
+	lib/bj_hash.$(OBJEXT) lib/command-line.$(OBJEXT) \
+	lib/csum.$(OBJEXT) lib/daemon.$(OBJEXT) \
+	lib/dhcp-client.$(OBJEXT) lib/dhcp.$(OBJEXT) \
+	lib/dirs.$(OBJEXT) lib/dynamic-string.$(OBJEXT) \
+	lib/fatal-signal.$(OBJEXT) lib/fault.$(OBJEXT) \
+	lib/flex-array.$(OBJEXT) lib/flow.$(OBJEXT) lib/hash.$(OBJEXT) \
 	lib/hmap.$(OBJEXT) lib/leak-checker.$(OBJEXT) \
 	lib/list.$(OBJEXT) lib/nx-match.$(OBJEXT) \
 	lib/mac-learning.$(OBJEXT) lib/netdev.$(OBJEXT) \
@@ -398,7 +400,7 @@ EGREP = /bin/grep -E
 EXEEXT = 
 FAULT_LIBS = -ldl
 GREP = /bin/grep
-HAVE_DPKG_BUILDPACKAGE = no
+HAVE_DPKG_BUILDPACKAGE = yes
 HW_LIB = 
 HW_TABLES = 
 INSTALL = /usr/bin/install -c
@@ -562,29 +564,31 @@ noinst_SCRIPTS = utilities/ofp-pki-cgi utilities/ofp-parse-leaks
 ro_c = echo '/* -*- mode: c; buffer-read-only: t -*- */'
 SUFFIXES = .in
 lib_libopenflow_a_SOURCES = lib/backtrace.c lib/backtrace.h \
-	lib/byte-order.h lib/command-line.c lib/command-line.h \
-	lib/compiler.h lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
+	lib/bj_hash.c lib/bj_hash.h lib/byte-order.h \
+	lib/command-line.c lib/command-line.h lib/compiler.h \
+	lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
 	lib/dhcp-client.c lib/dhcp-client.h lib/dhcp.c lib/dhcp.h \
 	lib/dhparams.h lib/dirs.c lib/dirs.h lib/dynamic-string.c \
 	lib/dynamic-string.h lib/fatal-signal.c lib/fatal-signal.h \
-	lib/fault.c lib/fault.h lib/flex-array.h lib/flow.c lib/flow.h \
-	lib/hash.c lib/hash.h lib/hmap.c lib/hmap.h lib/leak-checker.c \
-	lib/leak-checker.h lib/list.c lib/list.h lib/nx-match.c \
-	lib/nx-match.h lib/mac-learning.c lib/mac-learning.h \
-	lib/netdev.c lib/netdev.h lib/ofp.c lib/ofp.h lib/ofpbuf.c \
-	lib/ofpbuf.h lib/packets.h lib/pcap.c lib/pcap.h \
-	lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
+	lib/fault.c lib/fault.h lib/flex-array.c lib/flex-array.h \
+	lib/flow.c lib/flow.h lib/hash.c lib/hash.h lib/hmap.c \
+	lib/hmap.h lib/leak-checker.c lib/leak-checker.h lib/list.c \
+	lib/list.h lib/nx-match.c lib/nx-match.h lib/mac-learning.c \
+	lib/mac-learning.h lib/netdev.c lib/netdev.h lib/ofp.c \
+	lib/ofp.h lib/ofpbuf.c lib/ofpbuf.h lib/packets.h lib/pcap.c \
+	lib/pcap.h lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
 	lib/port-array.h lib/process.c lib/process.h lib/queue.c \
 	lib/queue.h lib/random.c lib/random.h lib/rconn.c lib/rconn.h \
 	lib/sat-math.h lib/shash.c lib/shash.h lib/signals.c \
 	lib/signals.h lib/socket-util.c lib/socket-util.h lib/stp.c \
 	lib/stp.h lib/svec.c lib/svec.h lib/tag.c lib/tag.h \
 	lib/timeval.c lib/timeval.h lib/type-props.h lib/util.c \
-	lib/util.h lib/vconn-provider.h lib/vconn-ssl.h \
-	lib/vconn-stream.c lib/vconn-stream.h lib/vconn-tcp.c \
-	lib/vconn-unix.c lib/vconn.c lib/vconn.h lib/vlog-modules.def \
-	lib/vlog-socket.c lib/vlog-socket.h lib/vlog.c lib/vlog.h \
-	lib/xtoxll.h $(am__append_3) $(am__append_4)
+	lib/util.h lib/unaligned.h lib/vconn-provider.h \
+	lib/vconn-ssl.h lib/vconn-stream.c lib/vconn-stream.h \
+	lib/vconn-tcp.c lib/vconn-unix.c lib/vconn.c lib/vconn.h \
+	lib/vlog-modules.def lib/vlog-socket.c lib/vlog-socket.h \
+	lib/vlog.c lib/vlog.h lib/xtoxll.h $(am__append_3) \
+	$(am__append_4)
 lib_libopenflow_a_LIBADD = oflib/ofl-actions.o \
                            oflib/ofl-actions-pack.o \
                            oflib/ofl-actions-print.o \
@@ -813,6 +817,8 @@ lib/$(DEPDIR)/$(am__dirstamp):
 	@: > lib/$(DEPDIR)/$(am__dirstamp)
 lib/backtrace.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
+lib/bj_hash.$(OBJEXT): lib/$(am__dirstamp) \
+	lib/$(DEPDIR)/$(am__dirstamp)
 lib/command-line.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/csum.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
@@ -827,6 +833,8 @@ lib/dynamic-string.$(OBJEXT): lib/$(am__dirstamp) \
 lib/fatal-signal.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/fault.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
+lib/flex-array.$(OBJEXT): lib/$(am__dirstamp) \
+	lib/$(DEPDIR)/$(am__dirstamp)
 lib/flow.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
 lib/hash.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
 lib/hmap.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
@@ -1257,6 +1265,7 @@ uninstall-dist_sbinSCRIPTS:
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f lib/backtrace.$(OBJEXT)
+	-rm -f lib/bj_hash.$(OBJEXT)
 	-rm -f lib/command-line.$(OBJEXT)
 	-rm -f lib/csum.$(OBJEXT)
 	-rm -f lib/daemon.$(OBJEXT)
@@ -1268,6 +1277,7 @@ mostlyclean-compile:
 	-rm -f lib/dynamic-string.$(OBJEXT)
 	-rm -f lib/fatal-signal.$(OBJEXT)
 	-rm -f lib/fault.$(OBJEXT)
+	-rm -f lib/flex-array.$(OBJEXT)
 	-rm -f lib/flow.$(OBJEXT)
 	-rm -f lib/hash.$(OBJEXT)
 	-rm -f lib/hmap.$(OBJEXT)
@@ -1372,6 +1382,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 include lib/$(DEPDIR)/backtrace.Po
+include lib/$(DEPDIR)/bj_hash.Po
 include lib/$(DEPDIR)/command-line.Po
 include lib/$(DEPDIR)/csum.Po
 include lib/$(DEPDIR)/daemon.Po
@@ -1383,6 +1394,7 @@ include lib/$(DEPDIR)/dpif.Po
 include lib/$(DEPDIR)/dynamic-string.Po
 include lib/$(DEPDIR)/fatal-signal.Po
 include lib/$(DEPDIR)/fault.Po
+include lib/$(DEPDIR)/flex-array.Po
 include lib/$(DEPDIR)/flow.Po
 include lib/$(DEPDIR)/hash.Po
 include lib/$(DEPDIR)/hmap.Po
@@ -2594,10 +2606,10 @@ uninstall-man: uninstall-man8
 	uninstall-man uninstall-man8
 
 
-#distcheck-hook:
-#	cd $(srcdir) && dpkg-buildpackage -rfakeroot -us -uc
-#	cd $(srcdir) && fakeroot ./debian/rules clean
 distcheck-hook:
+	cd $(srcdir) && dpkg-buildpackage -rfakeroot -us -uc
+	cd $(srcdir) && fakeroot ./debian/rules clean
+#distcheck-hook:
 .in:
 	$(PERL) $(srcdir)/soexpand.pl -I$(srcdir) < $< | \
 	    sed -e 's,[@]LOGDIR[@],$(LOGDIR),g' \

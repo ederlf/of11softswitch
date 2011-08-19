@@ -22,6 +22,8 @@
 #include <netinet/in.h>
 #include "ofpbuf.h"
 #include "openflow/match-ext.h"
+#include "oflib-exp/ofl-exp-match.h"
+
 
 //typedef unsigned int __attribute__((bitwise)) flow_wildcards_t;
 
@@ -32,7 +34,8 @@
 
 int ext_pull_match(struct ofpbuf *, unsigned int match_len, uint16_t priority);
 
-int ext_put_match(struct ext_match *, struct flow * flow);
+int
+nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned int match_len);
 
 char *ext_match_to_string(const uint8_t *, unsigned int match_len);
 int ext_match_from_string(const char *, struct ofpbuf *);
@@ -50,6 +53,9 @@ ext_put_header(struct flex_array *f, uint32_t header);
 
 void
 ext_put_32(struct flex_array *f, uint32_t header, uint32_t value);
+
+void
+ext_put_16(struct flex_array *f, uint32_t header, uint16_t value);
 
 /* Upper bound on the length of an nx_match.  The longest nx_match (assuming
  * we implement 4 registers) would be:

@@ -29,7 +29,6 @@ void
 flex_array_put(struct flex_array *f, const void *p, size_t size){
 
     memcpy(&f->entries[f->size],p,size);
-    printf("f %d\n", f->entries[f->size]);       
     f->size += size;
 }
 

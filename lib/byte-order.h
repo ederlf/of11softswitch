@@ -20,6 +20,10 @@
 #include <sys/types.h>
 #include <inttypes.h>
 
+#define ORDER_BIGENDIAN 0
+#define ORDER_LITTLEENDIAN 1
+
+
 static inline uint64_t
 htonll(uint64_t n)
 {
@@ -30,6 +34,15 @@ static inline uint64_t
 ntohll(uint64_t n)
 {
     return htonl(1) == 1 ? n : ((uint64_t) ntohl(n) << 32) | ntohl(n >> 32);
+}
+
+static inline int 
+get_byteorder(uint32_t v)
+{
+      uint32_t word = v;
+      char *byte = (char *) &word;
+      return(byte[0] ? ORDER_LITTLEENDIAN : ORDER_BIGENDIAN  );
+    
 }
 
 /* These macros may substitute for htons(), htonl(), and htonll() in contexts

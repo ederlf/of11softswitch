@@ -55,8 +55,10 @@ ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *b
     uint8_t *ptr;
     int i;
 
-    *buf_len = (sizeof(struct ofp_ext_flow_mod) -4) + msg->match->length + ofl_structs_instructions_ofp_total_len(msg->instructions, msg->instructions_num, NULL);;
+    *buf_len = (sizeof(struct ofp_ext_flow_mod) - 4) + msg->match->length + ofl_structs_instructions_ofp_total_len(msg->instructions, msg->instructions_num, NULL);;
+     printf("%d %d %d \n", (sizeof(struct ofp_ext_flow_mod)) , msg->match->length, ofl_structs_instructions_ofp_total_len(msg->instructions, msg->instructions_num, NULL) );
     *buf     = (uint8_t *)malloc(*buf_len);
+    
     flow_mod = (struct ofp_ext_flow_mod *)(*buf);
     flow_mod->cookie       = hton64(msg->cookie);
     flow_mod->cookie_mask  = hton64(msg->cookie_mask);
@@ -69,18 +71,21 @@ ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *b
     flow_mod->out_port     = htonl( msg->out_port);
     flow_mod->out_group    = htonl( msg->out_group);
     flow_mod->flags        = htons( msg->flags);
+    memset(flow_mod->pad,0x00, 2);
     
-    if(msg->match != NULL){
-        flow_mod->match = malloc(msg->match->length);
-        ofl_exp_match_pack(msg->match, &(flow_mod->match->header));
-        }
-    else flow_mod->match = NULL;
+    ptr = *buf + (sizeof(struct ofp_ext_flow_mod) - 4) ;
     
-    ptr = (*buf) + sizeof(struct ofp_ext_flow_mod);
+    flow_mod->match = malloc(msg->match->length);
+    ofl_exp_match_pack(msg->match, &(flow_mod->match->header)); 
+    memcpy(ptr,&flow_mod->match->header, msg->match->length); 
+
+    ptr +=  msg->match->length;
+
     for (i=0; i<msg->instructions_num; i++) {
+
         ptr += ofl_structs_instructions_pack(msg->instructions[i], (struct ofp_instruction *)ptr, NULL);
     }
-    printf("Match %d\n",flow_mod->match->match_fields.entries[0]);  
+ 
     return 0;
 }
 

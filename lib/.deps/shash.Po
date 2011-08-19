@@ -1,10 +1,10 @@
 lib/shash.o: lib/shash.c config.h lib/shash.h lib/hmap.h \
- /usr/lib/gcc/i686-linux-gnu/4.4.5/include/stdbool.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdbool.h \
  /usr/include/stdlib.h /usr/include/features.h \
  /usr/include/bits/predefs.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-32.h \
- /usr/lib/gcc/i686-linux-gnu/4.4.5/include/stddef.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/xlocale.h \
@@ -14,9 +14,10 @@ lib/shash.o: lib/shash.c config.h lib/shash.h lib/hmap.h \
  /usr/include/bits/sigset.h /usr/include/bits/time.h \
  /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h \
  /usr/include/alloca.h /usr/include/bits/stdlib.h lib/util.h \
- /usr/lib/gcc/i686-linux-gnu/4.4.5/include/stdarg.h /usr/include/stdint.h \
- /usr/include/bits/wchar.h /usr/include/stdio.h /usr/include/libio.h \
- /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdarg.h \
+ /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdint.h \
+ /usr/include/stdint.h /usr/include/bits/wchar.h /usr/include/stdio.h \
+ /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/bits/stdio.h /usr/include/bits/stdio2.h \
  /usr/include/string.h /usr/include/bits/string.h \
@@ -29,7 +30,7 @@ lib/shash.h:
 
 lib/hmap.h:
 
-/usr/lib/gcc/i686-linux-gnu/4.4.5/include/stdbool.h:
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdbool.h:
 
 /usr/include/stdlib.h:
 
@@ -45,7 +46,7 @@ lib/hmap.h:
 
 /usr/include/gnu/stubs-32.h:
 
-/usr/lib/gcc/i686-linux-gnu/4.4.5/include/stddef.h:
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stddef.h:
 
 /usr/include/bits/waitflags.h:
 
@@ -85,7 +86,9 @@ lib/hmap.h:
 
 lib/util.h:
 
-/usr/lib/gcc/i686-linux-gnu/4.4.5/include/stdarg.h:
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdarg.h:
+
+/usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdint.h:
 
 /usr/include/stdint.h:
 

@@ -74,8 +74,11 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
                 fprintf(stream, "\", group=\"");
                 ofl_group_print(stream, fm->out_group);
                 fprintf(stream, "\", flags=\"0x%"PRIx16"\", match=",fm->flags);
-                if(fm->match != NULL)
+                if(fm->match != NULL){
+            
                     ofl_exp_match_print(stream, fm->match);
+                    
+                    }
                 fprintf(stream, ", insts=[");
 
                 for(i=0; i<fm->instructions_num; i++) {

@@ -107,6 +107,8 @@ parse_options(int argc, char *argv[]);
 static uint8_t mask_all[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 
+static void 
+parse_ext_flow_mod_args(char *str,  struct ofl_ext_flow_mod *req);
 
 static void
 parse_flow_mod_args(char *str,  struct ofl_msg_flow_mod  *req);
@@ -291,12 +293,17 @@ dpctl_send(struct vconn *vconn, struct ofl_msg_header *msg) {
     if (error) {
         ofp_fatal(0, "Error packing request.");
     } 
+    
     ofpbuf = ofpbuf_new(0);
     ofpbuf_use(ofpbuf, buf, buf_size);
     ofpbuf_put_uninit(ofpbuf, buf_size);
-    struct ofp_ext_flow_mod *fm = (struct ofp_ext_flow_mod *) ofpbuf->data;
-    struct ext_match *m = (struct ofp_ext_match *) fm->match;
+    uint8_t * buff = ofpbuf->data + (sizeof(struct ofp_ext_flow_mod) -4);
+    struct ext_match *match;
+    match = (struct ext_match *) buff;    
+    printf("MATCH %d\n", ntohs(match->header.length));
     error = vconn_send_block(vconn, ofpbuf);
+
+  
     if (error) {
         ofp_fatal(0, "Error during transaction.");
     }
@@ -634,7 +641,7 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .instructions_num = 0,
              .instructions = NULL};  
         
-        parse_flow_mod_args(argv[0], &msg);
+        parse_ext_flow_mod_args(argv[0], &msg);
         if (argc > 1){
             size_t i;
             size_t inst_num = argc - 2;
@@ -1078,10 +1085,9 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
         m->header.type = OFPMT_STANDARD;
     }
     else {   
-        ext_m = xmalloc(sizeof(struct ofl_ext_match) +10);
-        
+        ext_m = xmalloc(sizeof(struct ofl_ext_match) + 15  );     
         ext_m->header.type = EXT_MATCH;
-        ext_m->header.length = sizeof(struct ofl_ext_match);
+        ext_m->header.length = sizeof(struct ext_match);
         flex_array_init(&(ext_m->match_fields));
     }
     for (token = strtok_r(str, KEY_SEP, &saveptr); token != NULL; token = strtok_r(NULL, KEY_SEP, &saveptr)) {
@@ -1095,9 +1101,9 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 uint32_t port;
                // ext_m = xrealloc(ext_m, 8);
                 parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &port);
-                ext_put_32(&ext_m->match_fields, NXM_OF_IN_PORT, port);
-                uint8_t * x = ext_m->match_fields.entries;
+                ext_put_32(&ext_m->match_fields, htonl(NXM_OF_IN_PORT), htonl(port));
                 ext_m->header.length += 8;
+                printf("ENTRY PORT %d\n", ext_m->match_fields.entries[8]);
             
             }/*mount the extended entry */    
             continue;
@@ -1206,6 +1212,8 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             else {
             
             
+            
+            
             }
             continue;
         }
@@ -1216,7 +1224,11 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint16_t dl_type;
+                //ext_m = xrealloc(ext_m, 6);
+                parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &dl_type);
+                ext_put_16(&ext_m->match_fields, htonl(NXM_OF_ETH_TYPE), htons(dl_type));
+                ext_m->header.length += 6;
             
             } 
             continue;
@@ -1708,7 +1720,84 @@ parse_flow_stat_args(char *str, struct ofl_msg_stats_request_flow *req) {
     }
 }
 
+static void parse_ext_flow_mod_args(char *str,  struct ofl_ext_flow_mod *req) {
 
+    char *token, *saveptr = NULL;
+
+    for (token = strtok_r(str, KEY_SEP, &saveptr); token != NULL; token = strtok_r(NULL, KEY_SEP, &saveptr)) {
+        if (strncmp(token, FLOW_MOD_COMMAND KEY_VAL, strlen(FLOW_MOD_COMMAND KEY_VAL)) == 0) {
+            uint8_t command;
+            if (parse8(token + strlen(FLOW_MOD_COMMAND KEY_VAL), flow_mod_cmd_names, NUM_ELEMS(flow_mod_cmd_names),0,  &command)) {
+                ofp_fatal(0, "Error parsing flow_mod command: %s.", token);
+            }
+            req->command = command;
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_COOKIE KEY_VAL, strlen(FLOW_MOD_COOKIE KEY_VAL)) == 0) {
+            if (sscanf(token, FLOW_MOD_COOKIE KEY_VAL "0x%"SCNx64"", &(req->cookie)) != 1) {
+                ofp_fatal(0, "Error parsing flow_mod cookie: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_COOKIE_MASK KEY_VAL, strlen(FLOW_MOD_COOKIE_MASK KEY_VAL)) == 0) {
+            if (sscanf(token, FLOW_MOD_COOKIE KEY_VAL "0x%"SCNx64"", &(req->cookie)) != 1) {
+                ofp_fatal(0, "Error parsing flow_mod cookie mask: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_TABLE_ID KEY_VAL, strlen(FLOW_MOD_TABLE_ID KEY_VAL)) == 0) {
+            if (parse8(token + strlen(FLOW_MOD_TABLE_ID KEY_VAL), table_names, NUM_ELEMS(table_names), 254,  &req->table_id)) {
+                ofp_fatal(0, "Error parsing flow_mod table: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_IDLE KEY_VAL, strlen(FLOW_MOD_IDLE KEY_VAL)) == 0) {
+            if (sscanf(token, FLOW_MOD_IDLE KEY_VAL "%"SCNu16"", &(req->idle_timeout)) != 1) {
+                ofp_fatal(0, "Error parsing %s: %s.", FLOW_MOD_IDLE, token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_HARD KEY_VAL, strlen(FLOW_MOD_HARD KEY_VAL)) == 0) {
+            if (sscanf(token, FLOW_MOD_HARD KEY_VAL "%"SCNu16"", &(req->hard_timeout)) != 1) {
+                ofp_fatal(0, "Error parsing %s: %s.", FLOW_MOD_HARD, token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_PRIO KEY_VAL, strlen(FLOW_MOD_PRIO KEY_VAL)) == 0) {
+            if (sscanf(token, FLOW_MOD_PRIO KEY_VAL "%"SCNu16"", &(req->priority)) != 1) {
+                ofp_fatal(0, "Error parsing %s: %s.", FLOW_MOD_PRIO, token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_BUFFER KEY_VAL, strlen(FLOW_MOD_BUFFER KEY_VAL)) == 0) {
+            if (parse32(token + strlen(FLOW_MOD_BUFFER KEY_VAL), buffer_names, NUM_ELEMS(buffer_names), UINT32_MAX,  &req->buffer_id)) {
+                ofp_fatal(0, "Error parsing flow_mod buffer: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_OUT_PORT KEY_VAL, strlen(FLOW_MOD_OUT_PORT KEY_VAL)) == 0) {
+            if (parse_port(token + strlen(FLOW_MOD_OUT_PORT KEY_VAL), &req->out_port)) {
+                ofp_fatal(0, "Error parsing flow_mod port: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_OUT_GROUP KEY_VAL, strlen(FLOW_MOD_OUT_GROUP KEY_VAL)) == 0) {
+            if (parse_group(token + strlen(FLOW_MOD_OUT_GROUP KEY_VAL), &req->out_port)) {
+                ofp_fatal(0, "Error parsing flow_mod group: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_FLAGS KEY_VAL, strlen(FLOW_MOD_FLAGS KEY_VAL)) == 0) {
+            if (sscanf(token, FLOW_MOD_FLAGS KEY_VAL "0x%"SCNx16"", &(req->flags)) != 1) {
+                ofp_fatal(0, "Error parsing %s: %s.", FLOW_MOD_FLAGS, token);
+            }
+            continue;
+        }
+        ofp_fatal(0, "Error parsing flow_mod arg: %s.", token);
+    }
+
+
+}
 
 static void
 parse_flow_mod_args(char *str,  struct ofl_msg_flow_mod *req) {

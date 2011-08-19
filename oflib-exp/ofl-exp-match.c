@@ -34,6 +34,7 @@
 #include <string.h>
 #include <netinet/in.h>
 
+#include "../lib/byte-order.h"
 #include "ofl-exp-match.h"
 #include "../oflib/ofl-log.h"
 #include "../oflib/ofl-print.h"
@@ -46,38 +47,40 @@ int
 ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
     
     if(src->type == EXT_MATCH){   
+        
         struct ofl_ext_match *m = (struct ofl_ext_match *) src;
-        struct ext_match *dst_match = (struct ext_match *) dst;
+        struct ext_match *dst_match = (struct ext_match *)dst;
         dst_match->header.type = htons(m->header.type);
         dst_match->header.length = htons(m->header.length);
         memset(dst_match->pad, 0x00, 4); 
-        memcpy(&dst_match->match_fields , &m->match_fields, m->match_fields.size + sizeof(m->match_fields));
+        memcpy(&dst_match->match_fields , &m->match_fields, sizeof(m->match_fields) + m->match_fields.size);
+
      } else {
         OFL_LOG_WARN(LOG_MODULE, "Experimenter match is not NXFF_NXM");
         return -1;
     }
+    
     return 0;
 }
 
 ofl_err
 ofl_exp_match_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match_header **dst){
 
-    struct ofl_ext_match *m;
-    struct ext_match *src_match = (struct ext_match*) src; 
+    
+    struct ofl_ext_match *m = malloc(*len);    
+    struct ext_match *src_match = (struct ext_match*) src;
+    
     if (*len < ntohs(src->length)) {
         OFL_LOG_WARN(LOG_MODULE, "Received match has invalid length (set to %u, but only %zu received).", 
 ntohs(src->length), *len);
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_LEN);
-    }
-   
-   
-   
+    }  
+    
     m = (struct ofl_ext_match *) malloc(sizeof(struct ofl_ext_match) + src_match->match_fields.size);
     m->header.type = ntohs(src_match->header.type);
     m->header.length = ntohs(src_match->header.length);
-    printf("SIZE %d\n",src_match->match_fields.size + sizeof(src_match->match_fields));
-    memcpy(&m->match_fields , &src_match->match_fields, sizeof(src_match->match_fields) + src_match->match_fields.size );
-    printf("M->header->type %d\n", m->match_fields.entries[3] );
+    memcpy(&m->match_fields , &src_match->match_fields, sizeof(src_match->match_fields));
+    nx_ntoh(src_match, m,src_match->match_fields.size);
     *len -=  m->header.length;
 
     *dst = &m->header;
@@ -120,7 +123,6 @@ ofl_exp_match_to_string(struct ofl_match_header *m){
 void
 ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
 
-
     switch (match->type) {
         case (EXT_MATCH): {
             int i;
@@ -128,8 +130,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
             unsigned length;
             
             struct ofl_ext_match *m = (struct ofl_ext_match *)match;
-            uint8_t *p = m->match_fields.entries;
-            printf("p->entries %d\n", p[3]);       
+            void *p = m->match_fields.entries;
             fprintf(stream, "extended_match{");
             for (i = 0; i < m->match_fields.total; i++){
                 header = ext_entry_ok(p,m->match_fields.size);
@@ -137,10 +138,15 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                 switch(header){
                     case (NXM_OF_IN_PORT):{
                         uint32_t *value = p + 4;
+                        /*Check for byte order */
                         fprintf(stream, "port=\"");   
-                        ofl_port_print(stream, *value);
+                        if(!get_byteorder(*value)){
+    
+                            ofl_port_print(stream, htonl(*value));
+                        }
+                        else ofl_port_print(stream, *value);
                         fprintf(stream, "\"");
-                        p += length; 
+                        p += length + 4; 
                         break;
                     }
                     case (NXM_OF_ETH_SRC): {
@@ -148,6 +154,18 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                     
                         break;
                     } 
+                    case (NXM_OF_ETH_TYPE): {
+                        uint16_t *value = p + 4;
+                        if(!get_byteorder(*value)){
+                            printf("ENTREI %d\n\n", *value);
+                            fprintf(stream, ", dltype=\"0x%"PRIx16"\"", htons(*value));   
+                        }
+                        else fprintf(stream, ", dltype=\"0x%"PRIx16"\"", *value); 
+                        p += length + 4; 
+                        break;
+                    
+                    
+                    }
                     
                 
                 }

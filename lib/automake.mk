@@ -81,6 +81,7 @@ lib_libopenflow_a_SOURCES = \
 	lib/type-props.h \
 	lib/util.c \
 	lib/util.h \
+	lib/unaligned.h \
 	lib/vconn-provider.h \
 	lib/vconn-ssl.h \
 	lib/vconn-stream.c \

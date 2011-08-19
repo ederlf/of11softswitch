@@ -74,16 +74,15 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     ofl_err error;
     size_t i;
     
-    sm = (struct ofp_ext_flow_mod *)src;
-    if (*len < ((sizeof(struct ofp_ext_flow_mod)-4) - sizeof(struct ext_match) )) {
+    sm = (struct ofp_ext_flow_mod *) src;
+    if (*len < ((sizeof(struct ofp_ext_flow_mod)) - sizeof(struct ext_match) )) {
         OFL_LOG_WARN(LOG_MODULE, "Received FLOW_MOD message has invalid length (%zu).", *len);
         return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
     }
 
-    *len -= (sizeof(struct ofp_ext_flow_mod)-4) ;
+    *len -= (sizeof(struct ofp_ext_flow_mod) - 4) ;
     
-    dm = (struct ofl_ext_flow_mod *)malloc(sizeof(struct ofl_ext_flow_mod));
-    
+    dm = (struct ofl_ext_flow_mod *)malloc(sizeof(struct ofl_ext_flow_mod) );
     dm->header.type = ntohl(sm->header.subtype);
     dm->header.header.experimenter_id =  ntohl(sm->header.vendor);
     dm->cookie =       ntoh64(sm->cookie);
@@ -97,25 +96,30 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     dm->out_port =     ntohl( sm->out_port);
     dm->out_group =    ntohl( sm->out_group);
     dm->flags =        ntohs( sm->flags);
-    
-    if (sm->match != NULL){
-        error = ofl_exp_match_unpack(&(sm->match->header), len, &(dm->match));
-         if (error) {
-            free(dm);
-            return error;
-         }
+
+
+    uint8_t *buff = src;
+    buff += (sizeof(struct ofp_ext_flow_mod) -4);
+    struct ext_match *match;
+    match = (struct ext_match *) buff;    
+
+    error = ofl_exp_match_unpack(&(match->header), len, &(dm->match));
+    if (error) {
+        free(dm);
+        return error;
     }
-    else dm->match = NULL;
-   
-    error = ofl_utils_count_ofp_instructions(&(sm->instructions), *len, &dm->instructions_num);
+
+    buff +=  ntohs(match->header.length);
+
+    error = ofl_utils_count_ofp_instructions(buff, *len, &dm->instructions_num);
     if (error) {
         ofl_exp_match_free(dm->match);
         free(dm);
         return error;
     }
-
+    
     dm->instructions = (struct ofl_instruction_header **)malloc(dm->instructions_num * sizeof(struct ofl_instruction_header *));
-    inst = sm->instructions;
+    inst = (struct ofp_instruction *) buff;
     for (i = 0; i < dm->instructions_num; i++) {
         error = ofl_structs_instructions_unpack(inst, len, &(dm->instructions[i]), NULL);
         if (error) {
@@ -127,7 +131,7 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
         }
         inst = (struct ofp_instruction *)((uint8_t *)inst + ntohs(inst->len));
     }
-
+   
     *msg = (struct ofl_msg_experimenter *)dm;
     return 0;
 }
