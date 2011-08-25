@@ -75,7 +75,6 @@ ofl_err
 dp_exp_message(struct datapath *dp,
                                 struct ofl_msg_experimenter *msg,
                                const struct sender *sender) {
-    printf("I'm here doc\n");
     switch (msg->experimenter_id) {
         case (OPENFLOW_VENDOR_ID): {
             struct ofl_exp_openflow_msg_header *exp = (struct ofl_exp_openflow_msg_header *)msg;
@@ -111,19 +110,17 @@ dp_exp_message(struct datapath *dp,
 	        
 	        switch (exp->type){
 	            case (EXT_FLOW_MOD): {
-	                printf("I'm here doc\n");
-	                    struct ofl_ext_flow_mod *fm =  (struct ofl_ext_flow_mod *) exp;
-                        struct ofl_ext_match *match = (struct ofl_ext_match *) fm->match;
-                        struct ofl_instruction_header *inst = (struct ofl_instruction_header *) *fm->instructions;
-                        printf("MATCH %d\n", match->match_fields.entries[7]);
-	                    printf("INST %d\n", inst->type);
+	                struct ofl_ext_flow_mod *fm =  (struct ofl_ext_flow_mod *) exp;
+	                pipeline_handle_ext_flow_mod(dp->pipeline, fm, sender);
+                    /*struct ofl_ext_match *match = (struct ofl_ext_match *) fm->match;
+                    struct ofl_instruction_header *inst = (struct ofl_instruction_header *) *fm->instructions;
+                    printf("MATCH %d\n", match->match_fields.entries[4]);
+	                printf("INST %d\n", inst->type);*/
 	                /*Return the Extended Flow Mod handler */
 	                return 0;
 	            }
 	        
 	        }
-	        printf("I understand now\n");
-	        return 0;
 	   }
 
         default: {

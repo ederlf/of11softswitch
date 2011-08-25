@@ -530,7 +530,6 @@ ofl_msg_print(FILE *stream, struct ofl_msg_header *msg, struct ofl_exp *exp) {
             if (exp == NULL || exp->msg == NULL || exp->msg->to_string == NULL) {
                 ofl_msg_print_experimenter((struct ofl_msg_experimenter *)msg, stream);
             } else {
-                printf("What I have to do Doc?Print!\n");
                 char *c = exp->msg->to_string((struct ofl_msg_experimenter *)msg);
                 fprintf(stream, "%s", c);
                 free(c);

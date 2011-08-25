@@ -605,7 +605,6 @@ struct ofp_ext_flow_mod {
     uint8_t pad[2];
     struct ext_match *match;	       /* Extended match */
     struct ofp_instruction instructions[0]; /* Instruction set. */
-   
 };
 
 /* NXT_FLOW_REMOVED (analogous to OFPT_FLOW_REMOVED). */
@@ -650,6 +649,7 @@ struct ofp_ext_flow_stats_request {
 /* Body for Nicira vendor stats reply of type NXST_FLOW (analogous to
  * OFPST_FLOW reply). */
 struct ofp_ext_flow_stats {
+    
     uint16_t length;          /* Length of this entry. */
     uint8_t table_id;         /* ID of table flow came from. */
     uint8_t pad;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, TrafficLab, Ericsson Research, Hungary
+/* Copyright (c) 2011, CPqD, Brazil
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * Author: Zoltán Lajos Kis <zoltan.lajos.kis@ericsson.com>
+ * Author: Eder Leão Fernandes <ederlf@cpqd.com.br>
  */
 
 #include <config.h>
@@ -179,6 +179,9 @@ parse16(char *str, struct names16 *names, size_t names_num, uint16_t max, uint16
 static int
 parse32(char *str, struct names32 *names, size_t names_num, uint32_t max, uint32_t *val);
 
+static void
+str_to_ipv6(const char *str_, struct in6_addr *addrp, struct in6_addr *maskp);
+
 int
 ofputil_flow_format_from_string(const char *s);
 
@@ -297,10 +300,6 @@ dpctl_send(struct vconn *vconn, struct ofl_msg_header *msg) {
     ofpbuf = ofpbuf_new(0);
     ofpbuf_use(ofpbuf, buf, buf_size);
     ofpbuf_put_uninit(ofpbuf, buf_size);
-    uint8_t * buff = ofpbuf->data + (sizeof(struct ofp_ext_flow_mod) -4);
-    struct ext_match *match;
-    match = (struct ext_match *) buff;    
-    printf("MATCH %d\n", ntohs(match->header.length));
     error = vconn_send_block(vconn, ofpbuf);
 
   
@@ -646,9 +645,7 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
             size_t i;
             size_t inst_num = argc - 2;
             
-            printf("Parsing\n");
             parse_match(argv[1], &(msg.match), preferred_flow_format);
-            printf("Parsed\n");
         
             msg.instructions_num = inst_num;
             msg.instructions = xmalloc(sizeof(struct ofl_instruction_header *) * inst_num);
@@ -1085,7 +1082,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
         m->header.type = OFPMT_STANDARD;
     }
     else {   
-        ext_m = xmalloc(sizeof(struct ofl_ext_match) + 15  );     
+        ext_m = xmalloc(sizeof(struct ofl_ext_match) + 64);     
         ext_m->header.type = EXT_MATCH;
         ext_m->header.length = sizeof(struct ext_match);
         flex_array_init(&(ext_m->match_fields));
@@ -1099,11 +1096,9 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             }    
             else {
                 uint32_t port;
-               // ext_m = xrealloc(ext_m, 8);
                 parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &port);
                 ext_put_32(&ext_m->match_fields, htonl(NXM_OF_IN_PORT), htonl(port));
                 ext_m->header.length += 8;
-                printf("ENTRY PORT %d\n", ext_m->match_fields.entries[8]);
             
             }/*mount the extended entry */    
             continue;
@@ -1127,8 +1122,11 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
-            
+                uint8_t dl_src[ETH_ADDR_LEN];
+                if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), dl_src)) 
+                    ofp_fatal(0, "Error parsing dl_src: %s.", token);
+                ext_put_eth(&ext_m->match_fields,htonl(NXM_OF_ETH_SRC),dl_src);
+                ext_m->header.length += 28;       
             }    
             continue;
         }
@@ -1163,7 +1161,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                
             
             }    
             continue;
@@ -1225,8 +1223,8 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             }
             else {
                 uint16_t dl_type;
-                //ext_m = xrealloc(ext_m, 6);
-                parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &dl_type);
+                if (parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &dl_type))
+                    ofp_fatal(0, "Error parsing dl_type: %s.", token);
                 ext_put_16(&ext_m->match_fields, htonl(NXM_OF_ETH_TYPE), htons(dl_type));
                 ext_m->header.length += 6;
             
@@ -1349,10 +1347,10 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             }
             continue;
         }
-        if (strncmp(token, MATCH_METADATA KEY_VAL, strlen(MATCH_METADATA KEY_VAL)) == 0) {
+        if (strncmp(token, MATCH_NW_SRC_IPV6 , strlen(MATCH_NW_SRC_IPV6 )) == 0) {
             if(!flow_format){ 
-                if (sscanf(token, MATCH_METADATA KEY_VAL "0x%"SCNx64"", &(m->metadata)) != 1) {
-                    ofp_fatal(0, "Error parsing %s: %s.", MATCH_METADATA, token);
+                if (parse8(token + strlen(MATCH_MPLS_TC KEY_VAL), NULL, 0, 0x07, &(m->mpls_tc))) {
+                    ofp_fatal(0, "Error parsing nw_src_ipv6: %s.", token);
                 }
             }
             else {
@@ -2125,6 +2123,47 @@ parse32(char *str, struct names32 *names, size_t names_num, uint32_t max, uint32
     }
     return -1;
 }
+
+/*static void
+str_to_ipv6(const char *str_, struct in6_addr *addrp, struct in6_addr *maskp)
+{
+    char *str = xstrdup(str_);
+    char *save_ptr = NULL;
+    const char *name, *netmask;
+    struct in6_addr addr, mask;
+    int retval;
+
+    name = strtok_r(str, "/", &save_ptr);
+    retval = name ? lookup_ipv6(name, &addr) : EINVAL;
+    if (retval) {
+        ovs_fatal(0, "%s: could not convert to IPv6 address", str);
+    }
+
+    netmask = strtok_r(NULL, "/", &save_ptr);
+    if (netmask) {
+        int prefix = atoi(netmask);
+        if (prefix <= 0 || prefix > 128) {
+            ovs_fatal(0, "%s: network prefix bits not between 1 and 128",
+                      str);
+        } else {
+            mask = ipv6_create_mask(prefix);
+        }
+    } else {
+        mask = in6addr_exact;
+    }
+    *addrp = ipv6_addr_bitand(&addr, &mask);
+
+    if (maskp) {
+        *maskp = mask;
+    } else {
+        if (!ipv6_mask_is_exact(&mask)) {
+            ovs_fatal(0, "%s: netmask not allowed here", str_);
+        }
+    }
+
+    free(str);
+}*/
+
 
 const char *
 ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format)

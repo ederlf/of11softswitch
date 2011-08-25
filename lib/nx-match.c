@@ -132,8 +132,8 @@ parse_nxm_entry(struct flex_array * entry, const struct nxm_field *f,
         return 0;
     }
 
-        /* Ethernet header. */
-   /* case NFI_NXM_OF_ETH_DST:
+        /* Ethernet header. 
+   case NFI_NXM_OF_ETH_DST:
         if ((wc->wildcards & (FWW_DL_DST | FWW_ETH_MCAST))
             != (FWW_DL_DST | FWW_ETH_MCAST)) {
             return NXM_DUP_TYPE;
@@ -163,10 +163,12 @@ parse_nxm_entry(struct flex_array * entry, const struct nxm_field *f,
             return 0;
         } else {
             return NXM_BAD_MASK;
-        }
-    case NFI_NXM_OF_ETH_SRC:
-        memcpy(flow->dl_src, value, ETH_ADDR_LEN);
-        return 0;*/
+        }*/
+    case NFI_NXM_OF_ETH_SRC: {
+        const uint8_t *p = (const uint8_t *) value;
+        ext_put_eth(entry, NXM_OF_ETH_SRC, p);
+        return 0;
+    }
     case NFI_NXM_OF_ETH_TYPE: {      
         const uint16_t *p = (const uint16_t *) value;
         ext_put_16(entry, NXM_OF_ETH_TYPE, ntohs(*p));
@@ -456,21 +458,6 @@ ext_entry_ok(const void *p, unsigned int match_len)
     }
     return header;
 }
-/*
-int 
-ext_put_match(struct ext_match* match, struct flow* flow){
-
-    if (!flow->flow_list == NULL)
-        return 0;
-    else
-    
-    ofpbuf *buffer = ;
-        
-
-    match->match_fields = (struct flex_array *) buffer->data;
-    return match_len;
-
-}*/
 
 /* ext_put_match() and helpers.
  *
@@ -600,6 +587,7 @@ ext_put_eth(struct flex_array *f, uint32_t header,
 {
     ext_put_header(f, header);
     flex_array_put(f, value, ETH_ADDR_LEN);
+    f->total++;
 }
 
 /*static void

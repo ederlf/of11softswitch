@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, CPqD, Brasil
+/* Copyright (c) 2011, CPqD, Brazil
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

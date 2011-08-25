@@ -101,14 +101,14 @@ struct ofl_ext_flow_removed {
 };
 
 
-/* Nicira vendor stats request of type EXT_FLOW (analogous to OFPST_FLOW
+/* Nicira vendor stats request of type EXT_FLOW (analogous to OFPST_FLOW/ OFPST_AGGREGATE
  * request). */
 struct ofl_ext_flow_stats_request {
     
-    struct ofl_ext_msg_header header;
+    struct ofl_msg_stats_request_experimenter header;
     uint8_t table_id;         /* ID of table to read (from ofp_table_stats),
                                  0xff for all tables. */
-    uint8_t pad1;               /* Align to 64 bits. */
+    uint8_t pad;               /* Align to 64 bits. */
     uint16_t out_port;        /* Require matching entries to include this
                                  as an output port.  A value of OFPP_NONE
                                  indicates no restriction. */
@@ -125,53 +125,6 @@ struct ofl_ext_flow_stats_request {
 };
 
 
-/* Body for Nicira vendor stats reply of type EXT_FLOW (analogous to
- * OFPST_FLOW reply). */
-struct ofl_ext_flow_stats {
-
-    struct ofl_ext_msg_header header;
-    uint16_t length;          /* Length of this entry. */
-    uint8_t table_id;         /* ID of table flow came from. */
-    uint8_t pad;
-    uint32_t duration_sec;    /* Time flow has been alive in seconds. */
-    uint32_t duration_nsec;   /* Time flow has been alive in nanoseconds
-                                 beyond duration_sec. */
-    uint16_t priority;        /* Priority of the entry. Only meaningful
-                                 when this is not an exact-match entry. */
-    uint16_t idle_timeout;    /* Number of seconds idle before expiration. */
-    uint16_t hard_timeout;    /* Number of seconds before expiration. */
-    uint64_t cookie;          /* Opaque controller-issued identifier. */
-    uint64_t packet_count;    /* Number of packets in flow. */
-    struct ofl_match_header        *match;         /* Description of fields. */
-    size_t instructions_num;
-    struct ofl_instruction_header **instructions; /* Instruction set. */
-
-};
-
-
-/* Nicira vendor stats request of type extST_AGGREGATE (analogous to
- * OFPST_AGGREGATE request). */
-struct ofl_ext_aggregate_stats_request {
-
-    struct ofl_ext_msg_header header;
-    uint8_t table_id;         /* ID of table to read (from ofp_table_stats)
-                                 0xff for all tables. */
-    uint8_t pad;           /* Align to 64 bits. */
-    uint16_t out_port;        /* Require matching entries to include this
-                                 as an output port.  A value of OFPP_NONE
-                                 indicates no restriction. */
-    uint32_t out_group;       /* Require matching entries to include this
-                                 as an output group.  A value of OFPG_ANY
-                                 indicates no restriction. */
-    uint64_t cookie;          /* Require matching entries to contain this
-                                 cookie value */
-    uint64_t cookie_mask;     /* Mask used to restrict the cookie bits that
-                                 must match. A value of 0 indicates
-                                 no restriction. */
-    struct ofl_match_header  *match;         /* Description of fields. */
-
-};
-
 int     
 ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *buf_len);
 
@@ -185,13 +138,13 @@ int
 ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *buf_len);
 
 int
+ofl_ext_free_flow_mod(struct ofl_ext_flow_mod *msg, bool with_match, bool with_instructions, struct ofl_exp *exp);
+
+int
 ofl_msg_ext_pack_flow_removed(struct ofl_ext_flow_removed *msg, uint8_t **buf, size_t *buf_len);
 
 int
 ofl_msg_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len);
-
-int
-ofl_msg_pack_stats_reply_flow(struct ofl_ext_flow_stats *msg, uint8_t **buf, size_t *buf_len);
 
 int
 ofl_msg_pack_stats_reply_aggregate(struct ofl_msg_stats_reply_aggregate *msg, uint8_t **buf, size_t *buf_len);
@@ -204,6 +157,5 @@ ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_
 
 int 
 ofl_ext_msg_free(struct ofl_msg_experimenter *msg);
-
 
 #endif

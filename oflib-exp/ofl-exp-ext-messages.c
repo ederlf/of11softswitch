@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, CPqD, Brasil
+/* Copyright (c) 2011, CPqD, Brazil
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,8 +66,8 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
                 ofl_flow_mod_command_print(stream, fm->command);
                 fprintf(stream, "\", cookie=\"0x%"PRIx64"\", mask=\"0x%"PRIx64"\", "
                           "idle=\"%u\", hard=\"%u\", prio=\"%u\", buf=\"",
-                  fm->cookie, fm->cookie_mask,
-                  fm->idle_timeout, fm->hard_timeout, fm->priority);
+                fm->cookie, fm->cookie_mask,
+                fm->idle_timeout, fm->hard_timeout, fm->priority);
                 ofl_buffer_print(stream, fm->buffer_id);
                 fprintf(stream, "\", port=\"");
                 ofl_port_print(stream, fm->out_port);
@@ -108,4 +108,19 @@ ofl_ext_msg_free(struct ofl_msg_experimenter *msg){
     else OFL_LOG_WARN(LOG_MODULE, "Trying to free non-Extended-Match Experimenter message.");
     return 0;  
 }
+
+int
+ofl_ext_free_flow_mod(struct ofl_ext_flow_mod *msg, bool with_match, bool with_instructions, struct ofl_exp *exp) {
+    if (with_match) {
+        ofl_structs_free_match(msg->match, exp);
+    }
+    if (with_instructions) {
+        OFL_UTILS_FREE_ARR_FUN2(msg->instructions, msg->instructions_num,
+                                ofl_structs_free_instruction, exp);
+    }
+
+    free(msg);
+    return 0;
+}
+
 

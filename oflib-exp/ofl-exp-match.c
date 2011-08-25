@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, CPqD, Brasil
+/* Copyright (c) 2011, CPqD, Brazil
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,11 @@
 
 #define LOG_MODULE ofl_exp
 OFL_LOG_INIT(LOG_MODULE)
+
+#define ETH_ADDR_FMT                                                    \
+    "%02"PRIx8":%02"PRIx8":%02"PRIx8":%02"PRIx8":%02"PRIx8":%02"PRIx8
+#define ETH_ADDR_ARGS(ea)                                   \
+    (ea)[0], (ea)[1], (ea)[2], (ea)[3], (ea)[4], (ea)[5]
 
 int
 ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
@@ -139,7 +144,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                     case (NXM_OF_IN_PORT):{
                         uint32_t *value = p + 4;
                         /*Check for byte order */
-                        fprintf(stream, "port=\"");   
+                        fprintf(stream, " port=\"");   
                         if(!get_byteorder(*value)){
     
                             ofl_port_print(stream, htonl(*value));
@@ -150,17 +155,17 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                         break;
                     }
                     case (NXM_OF_ETH_SRC): {
-                        
-                    
+                        uint8_t *value = p + 4;
+                        fprintf(stream, " dlsrc=\""ETH_ADDR_FMT"\"", ETH_ADDR_ARGS(value));  
+                        p += length + 4;     
                         break;
                     } 
                     case (NXM_OF_ETH_TYPE): {
                         uint16_t *value = p + 4;
                         if(!get_byteorder(*value)){
-                            printf("ENTREI %d\n\n", *value);
-                            fprintf(stream, ", dltype=\"0x%"PRIx16"\"", htons(*value));   
+                            fprintf(stream, " dltype=\"0x%"PRIx16"\"", htons(*value));   
                         }
-                        else fprintf(stream, ", dltype=\"0x%"PRIx16"\"", *value); 
+                        else fprintf(stream, " dltype=\"0x%"PRIx16"\"", *value); 
                         p += length + 4; 
                         break;
                     

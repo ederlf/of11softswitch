@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, CPqD, Brasil
+/* Copyright (c) 2011, CPqD, Brazil
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,6 @@ ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *b
     int i;
 
     *buf_len = (sizeof(struct ofp_ext_flow_mod) - 4) + msg->match->length + ofl_structs_instructions_ofp_total_len(msg->instructions, msg->instructions_num, NULL);;
-     printf("%d %d %d \n", (sizeof(struct ofp_ext_flow_mod)) , msg->match->length, ofl_structs_instructions_ofp_total_len(msg->instructions, msg->instructions_num, NULL) );
     *buf     = (uint8_t *)malloc(*buf_len);
     
     flow_mod = (struct ofp_ext_flow_mod *)(*buf);
