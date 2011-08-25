@@ -251,8 +251,8 @@ flow_table_flow_mod(struct flow_table *table, struct ofl_msg_header *mod, bool *
         }
     }
     
-        return 0;
-    }
+    return 0;
+   
 }
 
 

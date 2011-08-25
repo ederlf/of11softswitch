@@ -114,8 +114,9 @@ dp_exp_message(struct datapath *dp,
 	                pipeline_handle_ext_flow_mod(dp->pipeline, fm, sender);
                     /*struct ofl_ext_match *match = (struct ofl_ext_match *) fm->match;
                     struct ofl_instruction_header *inst = (struct ofl_instruction_header *) *fm->instructions;
-                    printf("MATCH %d\n", match->match_fields.entries[4]);
-	                printf("INST %d\n", inst->type);*/
+                    uint8_t *x = match->match_fields.entries;
+                    uint32_t *p = x + 10;
+                    printf("MATCH %x\n", *p); */
 	                /*Return the Extended Flow Mod handler */
 	                return 0;
 	            }

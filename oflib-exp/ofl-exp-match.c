@@ -84,8 +84,8 @@ ntohs(src->length), *len);
     m = (struct ofl_ext_match *) malloc(sizeof(struct ofl_ext_match) + src_match->match_fields.size);
     m->header.type = ntohs(src_match->header.type);
     m->header.length = ntohs(src_match->header.length);
-    memcpy(&m->match_fields , &src_match->match_fields, sizeof(src_match->match_fields));
-    nx_ntoh(src_match, m,src_match->match_fields.size);
+    memcpy(&m->match_fields , &src_match->match_fields, sizeof(src_match->match_fields) + src_match->match_fields.size);
+    //nx_ntoh(src_match, m,src_match->match_fields.size);
     *len -=  m->header.length;
 
     *dst = &m->header;
@@ -145,11 +145,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                         uint32_t *value = p + 4;
                         /*Check for byte order */
                         fprintf(stream, " port=\"");   
-                        if(!get_byteorder(*value)){
-    
-                            ofl_port_print(stream, htonl(*value));
-                        }
-                        else ofl_port_print(stream, *value);
+                        ofl_port_print(stream, *value);
                         fprintf(stream, "\"");
                         p += length + 4; 
                         break;
@@ -162,10 +158,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                     } 
                     case (NXM_OF_ETH_TYPE): {
                         uint16_t *value = p + 4;
-                        if(!get_byteorder(*value)){
-                            fprintf(stream, " dltype=\"0x%"PRIx16"\"", htons(*value));   
-                        }
-                        else fprintf(stream, " dltype=\"0x%"PRIx16"\"", *value); 
+                        fprintf(stream, " dltype=\"0x%"PRIx16"\"", *value); 
                         p += length + 4; 
                         break;
                     

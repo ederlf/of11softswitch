@@ -366,7 +366,7 @@ parse_nxm_entry(struct flex_array * entry, const struct nxm_field *f,
     NOT_REACHED();
 }
 
-int
+/*int
 nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned int match_len)
 {
     uint32_t header;
@@ -386,7 +386,7 @@ nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned 
         } else {
             /* 'hasmask' and 'length' are known to be correct at this point
              * because they are included in 'header' and nxm_field_lookup()
-             * checked them already. */
+             * checked them already. 
             error = parse_nxm_entry(&match_dst->match_fields, f, p + 4, p + 4 + length / 2);
         }
         if (error) {
@@ -405,7 +405,7 @@ nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned 
     }
 
     return match_len ? 1 : 0;
-}
+}*/
 
 int
 nxm_field_bytes(uint32_t header)
@@ -429,7 +429,6 @@ uint32_t
 ext_entry_ok(const void *p, unsigned int match_len)
 {
     unsigned int payload_len;
-    uint32_t header_be;
     uint32_t header;
     
     if (match_len < 4) {
@@ -439,12 +438,7 @@ ext_entry_ok(const void *p, unsigned int match_len)
         return 0;
     }
 
-    memcpy(&header_be, p, 4);
-    /*Check for byte order */
-    if(!get_byteorder(header_be)){
-        header = ntohl(header_be);
-    }
-    else header = header_be;
+    memcpy(&header, p, 4);
     payload_len = NXM_LENGTH(header);
     if (!payload_len) {
         VLOG_DBG(LOG_MODULE, "ext_entry %08"PRIx32" has invalid payload "
