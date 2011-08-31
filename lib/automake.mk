@@ -38,6 +38,11 @@ lib_libopenflow_a_SOURCES = \
 	lib/leak-checker.h \
 	lib/list.c \
 	lib/list.h \
+<<<<<<< HEAD
+=======
+	lib/list_t.c \
+	lib/list_t.h \
+>>>>>>> 1052e3ee8db21720898dff3a99c0b762fe14f67d
 	lib/nx-match.c \
 	lib/nx-match.h \
 	lib/mac-learning.c \
