@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include "ofpbuf.h"
+#include "hmap.h"
 #include "openflow/match-ext.h"
 #include "oflib-exp/ofl-exp-match.h"
 
@@ -32,10 +33,12 @@
  * See include/openflow/ext-match.h for NXM specification.
  */
 
-int ext_pull_match(struct ofpbuf *, unsigned int match_len, uint16_t priority);
+int 
+ext_pull_match(struct ofl_ext_match * match_src, struct hmap *match_dst);
 
-int
-nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned int match_len);
+
+/*int
+nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned int match_len);*/
 
 char *ext_match_to_string(const uint8_t *, unsigned int match_len);
 int ext_match_from_string(const char *, struct ofpbuf *);

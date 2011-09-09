@@ -1,6 +1,6 @@
 all:
 	g++ -Wall -fPIC -c nbee_link.cpp
-	g++ -shared -Wl,-soname,libnbeelink.so -Wl,--no-undefined -lnbee nbee_link.o ../lib/list_t.o -o libnbeelink.so     
+	g++ -shared -Wl,-soname,libnbeelink.so -Wl,--no-undefined -lnbee nbee_link.o ../lib/util.o  ../lib/hmap.o   ../lib/list_t.o -o libnbeelink.so     
 
 clean:
 	rm -f *.so

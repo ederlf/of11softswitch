@@ -141,7 +141,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                 header = ext_entry_ok(p,m->match_fields.size);
                 length = NXM_LENGTH(header);
                 switch(header){
-                    case (NXM_OF_IN_PORT):{
+                    case (TLV_EXT_IN_PORT):{
                         uint32_t *value = p + 4;
                         /*Check for byte order */
                         fprintf(stream, " port=\"");   
@@ -150,13 +150,13 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                         p += length + 4; 
                         break;
                     }
-                    case (NXM_OF_ETH_SRC): {
+                    case (TLV_EXT_DL_SRC): {
                         uint8_t *value = p + 4;
                         fprintf(stream, " dlsrc=\""ETH_ADDR_FMT"\"", ETH_ADDR_ARGS(value));  
                         p += length + 4;     
                         break;
                     } 
-                    case (NXM_OF_ETH_TYPE): {
+                    case (TLV_EXT_DL_TYPE): {
                         uint16_t *value = p + 4;
                         fprintf(stream, " dltype=\"0x%"PRIx16"\"", *value); 
                         p += length + 4; 

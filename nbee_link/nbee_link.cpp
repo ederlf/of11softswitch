@@ -7,8 +7,12 @@
 
 
 #include <string.h>
-#include <nbee.h>
+#include <nbee/nbee.h>
 #include "nbee_link.h"
+#include "../lib/list_t.h"
+#include "../lib/hmap.h"
+#include "../lib/bj_hash.h"
+#include "../include/openflow/match-ext.h"
 
 
 nbPacketDecoder *Decoder;
@@ -19,6 +23,7 @@ int PacketCounter= 1;
 _nbPDMLPacket * curr_packet;
 struct pcap_pkthdr * pkhdr;
 
+static struct hmap all_packet_fields = HMAP_INITIALIZER(&all_packet_fields);
 
 extern "C" int initialize_nb_engine()
 {
@@ -28,7 +33,7 @@ extern "C" int initialize_nb_engine()
 	int NetPDLDecoderFlags = nbDECODER_GENERATEPDML;
 	int ShowNetworkNames = 0;
 
-	char* NetPDLFileName = "/work/svnnetbee/bin/customnetpdl.xml";
+	char* NetPDLFileName = "/work/OpenFlow_IPv6_Support/of11softswitch/nbee_link/customnetpdl.xml";
 
 	pkhdr = new struct pcap_pkthdr;
 
@@ -69,7 +74,7 @@ extern "C" int initialize_nb_engine()
 
 }
 
-extern "C" int convertpkt_test(const unsigned char* pktin, list_t * pktout)
+extern "C" int convertpkt_test(const unsigned char* pktin, struct packet_out * pktout)
 {
 	printf("\nis it possible? 1");
 
@@ -95,9 +100,9 @@ extern "C" int convertpkt_test(const unsigned char* pktin, list_t * pktout)
 
 	printf("\nPACKET LEN: %ld ",curr_packet->Length);
 
-        pktout = (list_t*) malloc(sizeof(list_t));
+    pktout = (struct packet_out*) malloc(sizeof(struct packet_out));
 
-	list_t_init(pktout);
+	list_t_init(&pktout->field.node);
 
 	while (1)
 	{
@@ -109,16 +114,22 @@ extern "C" int convertpkt_test(const unsigned char* pktin, list_t * pktout)
                         if(field->LongName[0]<58 && field->LongName[0]>47)
                         {
 	                        int i,pow;
-
+                                uint32_t type;
+                                uint8_t size;
                                 packet_out_t *new_field;
                                 new_field = (packet_out_t *)malloc(sizeof(packet_out_t));
-                                for (new_field->type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
-        	                        new_field->type = new_field->type + (pow*(field->LongName[i]-48));
-                                new_field->length = field->Size;
-                                printf("\n LongName: %d",new_field->type);
+                                for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
+        	                        type = type + (pow*(field->LongName[i]-48));
+                                size = field->Size;
+                                pktout->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),size); 
+  
+                                printf("\n LongName: %d",pktout->header);
                                 new_field->value = (uint8_t*) malloc(field->Size);
                                 memcpy(new_field->value,(pktin + field->Position),field->Size);
-                                list_t_push_back(pktout,&new_field->node);
+                                list_t_push_back(&pktout->field.node,&new_field->node);
+                                memcpy(&pktout->field,new_field, sizeof(new_field));  
+                                hmap_insert(&all_packet_fields, &pktout->hmap_node,
+                        hash_int(pktout->header, 0));
                         }
 
 			if(field->NextField == NULL && field->ParentField == NULL)
@@ -154,5 +165,12 @@ extern "C" int convertpkt_test(const unsigned char* pktin, list_t * pktout)
 
 	//printf("%s\n",*proto);
 	printf("Packet %ld done\n",curr_packet->Number);
+
+}
+
+int main (int *argc, char **argv){
+
+
+
 
 }

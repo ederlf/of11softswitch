@@ -10,8 +10,8 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include "../lib/list_t.h"
-#include "../lib/hmap.h"
+#include "/work/ederlf/OpenFlow_IPv6_Support/of11softswitch/lib/list_t.h"
+#include "/work/ederlf/OpenFlow_IPv6_Support/of11softswitch/lib/hmap.h"
 
 #define ETHADDLEN 6
 #define IPV6ADDLEN 16
@@ -19,11 +19,11 @@
 #define ERRBUF_SIZE 256
 
 
-typedef struct pcap_pkthdr {
-	struct timeval ts;	/* time stamp */
-	uint32_t caplen;	/* length of portion present */
-	uint32_t len;	/* length this packet (off wire) */
-}pcap_pkthdr_t;
+//typedef struct pcap_pkthdr {
+//	struct timeval ts;	/* time stamp */
+//	uint32_t caplen;	/* length of portion present */
+//	uint32_t len;	/* length this packet (off wire) */
+//}pcap_pkthdr_t;
 
 struct ethernetpkt {
 	short ethdst[ETHADDLEN];
@@ -40,15 +40,15 @@ struct ipv6pkt {
 typedef struct packet_field{
 	list_t node;
 	uint8_t* value;
-}packet_out_t;
+}packet_field_t;
 
-struct packet_out{
+typedef struct packet_out{
 
     struct hmap_node hmap_node;
     uint32_t header;                  /* NXM_* value. */
-    struct packet_field field;              /* Field Value */
+    list_t field;              /* Field Value */
 
-};
+}packet_out_t;
 
 #ifdef __cplusplus
 extern "C"

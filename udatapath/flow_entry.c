@@ -39,6 +39,7 @@
 #include "group_entry.h"
 #include "oflib/ofl-messages.h"
 #include "oflib/ofl-structs.h"
+#include "oflib-exp/ofl-exp-match.h"
 #include "oflib/ofl-actions.h"
 #include "oflib/ofl-utils.h"
 #include "packets.h"
@@ -95,6 +96,19 @@ flow_entry_has_out_group(struct flow_entry *entry, uint32_t group) {
     return false;
 }
 
+bool
+ext_flow_entry_matches(struct flow_entry *entry, struct ofl_ext_flow_mod *mod, bool strict){
+
+       if (strict) {
+        return (entry->stats->priority == mod->priority) &&
+               match_ext_strict((struct ofl_ext_match *)entry->stats->match,
+                                (struct ofl_ext_match *)mod->match);
+        } else {
+        return match_ext_nonstrict((struct ofl_ext_match *)entry->stats->match,
+                                   (struct ofl_ext_match *)mod->match);
+        }
+
+}
 
 bool
 flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool strict) {
@@ -106,6 +120,12 @@ flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool 
         return match_std_nonstrict((struct ofl_match_standard *)entry->stats->match,
                                    (struct ofl_match_standard *)mod->match);
     }
+}
+
+
+bool
+ext_flow_entry_overlaps(struct flow_entry *entry, struct ofl_ext_flow_mod *mod) {
+
 }
 
 bool
@@ -169,40 +189,59 @@ flow_entry_update(struct flow_entry *entry) {
 /* Creates a modified match from the original match. */
 static struct ofl_match_header *
 make_mod_match(struct ofl_match_header *match) {
-    if (match->type != OFPMT_STANDARD) {
-        VLOG_WARN_RL(LOG_MODULE, &rl, "Flow entry has unknown match type.");
-        return NULL;
-    } else {
-        struct ofl_match_standard *m = memcpy(xmalloc(OFPMT_STANDARD_LENGTH), match, OFPMT_STANDARD_LENGTH);
+       
+    switch (match->type){
+        case (OFPMT_STANDARD): {
+            struct ofl_match_standard *m = memcpy(xmalloc(OFPMT_STANDARD_LENGTH), match, OFPMT_STANDARD_LENGTH);
 
-        /* NOTE: According to 1.1 spec. only those protocols' fields should be taken into
-                 account, which are explicitly matched (MPLS, ARP, IP, TCP, UDP).
-                 the rest of the fields are wildcarded in the created match. */
+            /* NOTE: According to 1.1 spec. only those protocols' fields should be taken into
+                     account, which are explicitly matched (MPLS, ARP, IP, TCP, UDP).
+                     the rest of the fields are wildcarded in the created match. */
 
-        /* IPv4 / ARP */
-        if (((m->wildcards & OFPFW_DL_TYPE) != 0) ||
-            (m->dl_type != ETH_TYPE_IP && m->dl_type != ETH_TYPE_ARP)) {
-            m->wildcards |= OFPFW_NW_TOS;
-            m->wildcards |= OFPFW_NW_PROTO;
-            m->nw_src_mask = 0xffffffff;
-            m->nw_dst_mask = 0xffffffff;
+
+            if ((m->wildcards & OFPFW_DL_TYPE) != 0) {
+                m->dl_type = 0x0000;
+            }
+
+            /* IPv4 / ARP */
+            if (m->dl_type != ETH_TYPE_IP && m->dl_type != ETH_TYPE_ARP) {
+                m->nw_tos =               0x00;
+                m->nw_proto =             0x0000;
+                m->nw_src =               0x00000000;
+                m->nw_src_mask =          0xffffffff;
+                m->nw_dst =               0x00000000;
+                m->nw_dst_mask =          0xffffffff;
+                m->wildcards |= OFPFW_NW_TOS;
+                m->wildcards |= OFPFW_NW_PROTO;
+            }
+
+            /* Transport */
+            if (m->nw_proto != IP_TYPE_ICMP && m->nw_proto != IP_TYPE_TCP &&
+                m->nw_proto != IP_TYPE_UDP  && m->nw_proto != IP_TYPE_SCTP) {
+                m->tp_src =        0x0000;
+                m->tp_dst =        0x0000;
+                m->wildcards |= OFPFW_TP_SRC;
+                m->wildcards |= OFPFW_TP_DST;
+            }
+
+            /* MPLS */
+            if (m->dl_type != ETH_TYPE_MPLS && m->dl_type != ETH_TYPE_MPLS_MCAST) {
+                m->mpls_label = 0x00000000;
+                m->mpls_tc =    0x00;
+                m->wildcards |= OFPFW_MPLS_LABEL;
+                m->wildcards |= OFPFW_MPLS_TC;
+            }
+
+            return (struct ofl_match_header *)m;
         }
-
-        /* Transport */
-        if (((m->wildcards & OFPFW_NW_PROTO) != 0) ||
-            (m->nw_proto != IP_TYPE_ICMP && m->nw_proto != IP_TYPE_TCP &&
-             m->nw_proto != IP_TYPE_UDP  && m->nw_proto != IP_TYPE_SCTP)) {
-            m->wildcards |= OFPFW_TP_SRC;
-            m->wildcards |= OFPFW_TP_DST;
+        case (EXT_MATCH):{
+                    
+                
+                return (struct ofl_match_header *)match;
+                    
         }
-
-        /* MPLS */
-        if (m->dl_type != ETH_TYPE_MPLS && m->dl_type != ETH_TYPE_MPLS_MCAST) {
-            m->wildcards |= OFPFW_MPLS_LABEL;
-            m->wildcards |= OFPFW_MPLS_TC;
-        }
-
-        return (struct ofl_match_header *)m;
+        default: VLOG_WARN_RL(LOG_MODULE, &rl, "Flow entry has unknown match type.");
+                return NULL;
     }
 }
 
@@ -261,6 +300,51 @@ del_group_refs(struct flow_entry *entry) {
     }
 }
 
+struct flow_entry *
+ext_flow_entry_create(struct datapath *dp, struct flow_table *table, struct ofl_ext_flow_mod *mod) {
+
+    struct flow_entry *entry;
+    uint64_t now;
+
+    now = time_msec();
+
+    entry = xmalloc(sizeof(struct flow_entry));
+    entry->dp    = dp;
+    entry->table = table;
+
+    entry->stats = xmalloc(sizeof(struct ofl_flow_stats));
+
+    entry->stats->table_id         = mod->table_id;
+    entry->stats->duration_sec     = 0;
+    entry->stats->duration_nsec    = 0;
+    entry->stats->priority         = mod->priority;
+    entry->stats->idle_timeout     = mod->idle_timeout;
+    entry->stats->hard_timeout     = mod->hard_timeout;
+    entry->stats->cookie           = mod->cookie;
+    entry->stats->packet_count     = 0;
+    entry->stats->byte_count       = 0;
+
+    entry->stats->match            = mod->match;
+    entry->stats->instructions_num = mod->instructions_num;
+    entry->stats->instructions     = mod->instructions;
+
+    entry->match = make_mod_match(mod->match);
+
+    entry->created      = now;
+    entry->remove_at    = mod->hard_timeout == 0 ? 0
+                                  : now + mod->hard_timeout * 1000;
+    entry->last_used    = now;
+    entry->send_removed = ((mod->flags & OFPFF_SEND_FLOW_REM) != 0);
+
+    list_init(&entry->match_node);
+    list_init(&entry->idle_node);
+    list_init(&entry->hard_node);
+
+    list_init(&entry->group_refs);
+    init_group_refs(entry);
+
+    return entry;
+}
 
 struct flow_entry *
 flow_entry_create(struct datapath *dp, struct flow_table *table, struct ofl_msg_flow_mod *mod) {

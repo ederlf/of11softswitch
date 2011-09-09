@@ -56,6 +56,8 @@ OFP_CHECK_HWTABLES
 OFP_CHECK_HWLIBS
 AC_SYS_LARGEFILE
 
+AC_CHECK_LIB([nbee_link],[initialize_nb_engine convertpkt_test])
+
 AC_CHECK_FUNCS([strsignal])
 
 AC_ARG_VAR(KARCH, [Kernel Architecture String])
@@ -82,6 +84,8 @@ OFP_ENABLE_OPTION([-Wno-override-init])
 
 AC_CONFIG_FILES([Makefile 
 ])
+
+
 
 #AC_CONFIG_FILES([Makefile
 #datapath/Makefile

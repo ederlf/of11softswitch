@@ -35,39 +35,24 @@
 #define LOG_MODULE VLM_nx_match
 
 
-/* For each NXM_* field, define NFI_NXM_* as consecutive integers starting from
+/* For each TLV_* field, define NFI_TLV_* as consecutive integers starting from
  * zero. */
 enum nxm_field_index {
 #define DEFINE_FIELD(HEADER, WILDCARD, DL_TYPES, NW_PROTO) \
-        NFI_NXM_##HEADER,
+        NFI_TLV_##HEADER,
 #include "nx-match.def"
-    N_NXM_FIELDS
+    N_TLV_FIELDS
 };
 
 struct nxm_field {
     struct hmap_node hmap_node;
-    enum nxm_field_index index;       /* NFI_* value. */
-    uint32_t header;                  /* NXM_* value. */
-    unsigned int wildcard;            /* FWW_* bit, if exactly one. */
-    uint16_t dl_type[N_NXM_DL_TYPES]; /* dl_type prerequisites. */
-    uint8_t nw_proto;                 /* nw_proto prerequisite, if nonzero. */
-    const char *name;                 /* "NXM_*" string. */
+    uint32_t header;                  /* TLV_* value. */
+    uint8_t *value;
+    uint8_t * mask;
 };
 
 
-/* All the known fields. */
-static struct nxm_field nxm_fields[N_NXM_FIELDS] = {
-#define DEFINE_FIELD(HEADER, WILDCARD, DL_TYPES, NW_PROTO)     \
-    { HMAP_NODE_NULL_INITIALIZER, NFI_NXM_##HEADER, NXM_##HEADER, WILDCARD, \
-        DL_CONVERT DL_TYPES, NW_PROTO, "NXM_" #HEADER},
-#define DL_CONVERT(T1, T2) { CONSTANT_HTONS(T1), CONSTANT_HTONS(T2) }
-#include "nx-match.def"
-};
-
-/* Hash table of 'nxm_fields'. */
-static struct hmap all_nxm_fields = HMAP_INITIALIZER(&all_nxm_fields);
-
-/* Possible masks for NXM_OF_ETH_DST_W. */
+/* Possible masks for TLV_EXT_DL_DST_W. */
 static const uint8_t eth_all_0s[ETH_ADDR_LEN]
     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t eth_all_1s[ETH_ADDR_LEN]
@@ -77,36 +62,12 @@ static const uint8_t eth_mcast_1[ETH_ADDR_LEN]
 static const uint8_t eth_mcast_0[ETH_ADDR_LEN]
     = {0xfe, 0xff, 0xff, 0xff, 0xff, 0xff};
 
-static void
-nxm_init(void)
-{
-    if (hmap_is_empty(&all_nxm_fields)) {
-        int i;
 
-        for (i = 0; i < N_NXM_FIELDS; i++) {
-            struct nxm_field *f = &nxm_fields[i];
-            hmap_insert(&all_nxm_fields, &f->hmap_node,
-                        hash_int(f->header, 0));
-        }
-
-        /* Verify that the header values are unique (duplicate "case" values
-         * cause a compile error). */
-        switch (0) {
-#define DEFINE_FIELD(HEADER, WILDCARD, DL_TYPE, NW_PROTO)  \
-        case NXM_##HEADER: break;
-#include "nx-match.def"
-        }
-    }
-}
-
-
-
-static const struct nxm_field *
+/*static const struct nxm_field *
 nxm_field_lookup(uint32_t header)
 {
     struct nxm_field *f;
 
-    nxm_init();
 
     HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(header, 0),
                              &all_nxm_fields) {
@@ -116,19 +77,20 @@ nxm_field_lookup(uint32_t header)
     }
 
     return NULL;
-}
+}*/
 
 
-static int
+/*static int
 parse_nxm_entry(struct flex_array * entry, const struct nxm_field *f,
                 const void *value, const void *mask)
 {
 
     switch (f->index) {
-        /* Metadata. */
-    case NFI_NXM_OF_IN_PORT:{
+        /* Metadata. 
+    case NFI_TLV_EXT_IN_PORT:{
         const uint8_t *p = (const uint8_t *) value;    
-        ext_put_32(entry, NXM_OF_IN_PORT, (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
+        f->value = p;
+        //ext_put_32(entry, TLV_EXT_IN_PORT, (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
         return 0;
     }
 
@@ -163,15 +125,15 @@ parse_nxm_entry(struct flex_array * entry, const struct nxm_field *f,
             return 0;
         } else {
             return NXM_BAD_MASK;
-        }*/
-    case NFI_NXM_OF_ETH_SRC: {
+        }
+    case NFI_TLV_EXT_DL_SRC: {
         const uint8_t *p = (const uint8_t *) value;
-        ext_put_eth(entry, NXM_OF_ETH_SRC, p);
+        ext_put_eth(entry, TLV_EXT_DL_SRC, p);
         return 0;
     }
-    case NFI_NXM_OF_ETH_TYPE: {      
+    case NFI_TLV_EXT_DL_TYPE: {      
         const uint16_t *p = (const uint16_t *) value;
-        ext_put_16(entry, NXM_OF_ETH_TYPE, ntohs(*p));
+        ext_put_16(entry, TLV_EXT_DL_TYPE, ntohs(*p));
         return 0;
     }
         /* 802.1Q header. */
@@ -344,68 +306,41 @@ parse_nxm_entry(struct flex_array * entry, const struct nxm_field *f,
         }
         memcpy(flow->arp_tha, value, ETH_ADDR_LEN);
         return 0;
-
-        /* ARP header. */
-   /*  case NFI_NXM_OF_ARP_OP:
-        if (ntohs(get_unaligned_be16(value)) > 255) {
-            return NXM_BAD_VALUE;
-        } else {
-            flow->nw_proto = ntohs(get_unaligned_be16(value));
-            return 0;
-        }
-
-    case NFI_NXM_NX_ARP_SHA:
-        memcpy(flow->arp_sha, value, ETH_ADDR_LEN);
-        return 0;
-    case NFI_NXM_NX_ARP_THA:
-        memcpy(flow->arp_tha, value, ETH_ADDR_LEN);
-        return 0;*/
+    }
     case N_NXM_FIELDS:
         NOT_REACHED();
+    
     }
     NOT_REACHED();
-}
+}*/
 
-/*int
-nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned int match_len)
+int 
+ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
 {
-    uint32_t header;
-    uint8_t *p =  match_src->match_fields.entries;
+
+    uint32_t header, match_len;
+    struct nxm_field *f = (struct nxm_field *) malloc(sizeof(struct nxm_field)); 
     
+    uint8_t *p =  match_src->match_fields.entries;
     if (!p) {
         return 1;
     }
-    flex_array_init(&match_dst->match_fields);
+    match_len = match_src->match_fields.size;
     while ((header = ext_entry_ok(p, match_len)) != 0) {
         unsigned length = NXM_LENGTH(header);
-        const struct nxm_field *f;
-        int error;
-        f = nxm_field_lookup(header);
-        if (!f) {
-            error = 1;
-        } else {
-            /* 'hasmask' and 'length' are known to be correct at this point
-             * because they are included in 'header' and nxm_field_lookup()
-             * checked them already. 
-            error = parse_nxm_entry(&match_dst->match_fields, f, p + 4, p + 4 + length / 2);
-        }
-        if (error) {
-            VLOG_DBG(LOG_MODULE, "bad nxm_entry with vendor=%"PRIu32", "
-                        "field=%"PRIu32", hasmask=%"PRIu32", type=%"PRIu32" "
-                        "(error %x)",
-                        NXM_VENDOR(header), NXM_FIELD(header),
-                        NXM_HASMASK(header), NXM_TYPE(header),
-                        error);
-            return error;
-        }
-
-
+        f->header = header;
+        f->value = p + 4;
+        if (NXM_HASMASK(header))
+            f->mask = p + 4 + length / 2;
+        else memset(f->mask,0xf,length);
+        hmap_insert(match_dst, &f->hmap_node,
+                        hash_int(f->header, 0));      
         p += 4 + length;
         match_len -= 4 + length;
     }
 
     return match_len ? 1 : 0;
-}*/
+}
 
 int
 nxm_field_bytes(uint32_t header)
@@ -630,18 +565,4 @@ ext_pull_match(struct ofpbuf *, unsigned int match_len, uint16_t priority){
 
 }*/
 
-static uint32_t
-parse_nxm_field_name(const char *name, int name_len)
-{
-    const struct nxm_field *f;
-
-    /* Check whether it's a field name. */
-    for (f = nxm_fields; f < &nxm_fields[ARRAY_SIZE(nxm_fields)]; f++) {
-        if (!strncmp(f->name, name, name_len) && f->name[name_len] == '\0') {
-            return f->header;
-        }
-    }
-
-    return 0;
-}
 

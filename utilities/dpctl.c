@@ -869,8 +869,11 @@ int main(int argc, char *argv[])
 
     argc -= optind;
     argv += optind;
-    if (argc < 1)
+   
+    if (argc < 1){
         ofp_fatal(0, "missing SWITCH; use --help for help");
+             
+    }
     if (argc < 2)
         ofp_fatal(0, "missing COMMAND; use --help for help");
 
@@ -1097,7 +1100,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             else {
                 uint32_t port;
                 parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &port);
-                ext_put_32(&ext_m->match_fields, NXM_OF_IN_PORT, port);
+                ext_put_32(&ext_m->match_fields, TLV_EXT_IN_PORT, port);
                 ext_m->header.length += 8;
             
             }/*mount the extended entry */    
@@ -1125,21 +1128,9 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 uint8_t dl_src[ETH_ADDR_LEN];
                 if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), dl_src)) 
                     ofp_fatal(0, "Error parsing dl_src: %s.", token);
-                ext_put_eth(&ext_m->match_fields,NXM_OF_ETH_SRC,dl_src);
+                ext_put_eth(&ext_m->match_fields,TLV_EXT_DL_SRC,dl_src);
                 ext_m->header.length += 28;       
             }    
-            continue;
-        }
-        if (strncmp(token, MATCH_DL_SRC KEY_VAL, strlen(MATCH_DL_SRC KEY_VAL)) == 0) {
-            if(!flow_format){
-                if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), m->dl_src)) {
-                    ofp_fatal(0, "Error parsing dl_src: %s.", token);
-                }
-            }
-            else {
-            
-            
-            }   
             continue;
         }
         if (strncmp(token, MATCH_DL_SRC_MASK KEY_VAL, strlen(MATCH_DL_SRC_MASK KEY_VAL)) == 0) {
@@ -1149,7 +1140,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                
             
             }    
             continue;
@@ -1161,7 +1152,11 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-                
+                uint8_t dl_src[ETH_ADDR_LEN];
+                if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), dl_src)) 
+                    ofp_fatal(0, "Error parsing dl_dst: %s.", token);
+                ext_put_eth(&ext_m->match_fields,TLV_EXT_DL_DST,dl_src);
+                ext_m->header.length += 28;       
             
             }    
             continue;
@@ -1173,22 +1168,12 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
+                
             
             }    
             continue;
         }
-        if (strncmp(token, MATCH_DL_VLAN KEY_VAL, strlen(MATCH_DL_VLAN KEY_VAL)) == 0) {
-            if(!flow_format){ 
-                if (parse_dl_addr(token + strlen(MATCH_DL_DST_MASK KEY_VAL), m->dl_dst_mask)) {
-                    ofp_fatal(0, "Error parsing dl_dst_mask: %s.", token);
-                }
-            }
-            else {
-            
-            
-            }    
-            continue;
-        }
+
         if (strncmp(token, MATCH_DL_VLAN KEY_VAL, strlen(MATCH_DL_VLAN KEY_VAL)) == 0) {
             if(!flow_format){
                 if (parse_vlan_vid(token + strlen(MATCH_DL_VLAN KEY_VAL), &(m->dl_vlan))) {
@@ -1225,7 +1210,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 uint16_t dl_type;
                 if (parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &dl_type))
                     ofp_fatal(0, "Error parsing dl_type: %s.", token);
-                ext_put_16(&ext_m->match_fields, NXM_OF_ETH_TYPE, dl_type);
+                ext_put_16(&ext_m->match_fields, TLV_EXT_DL_TYPE, dl_type);
                 ext_m->header.length += 6;
             
             } 
