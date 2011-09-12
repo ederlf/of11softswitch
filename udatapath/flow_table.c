@@ -324,7 +324,7 @@ flow_table_lookup(struct flow_table *table, struct packet *pkt) {
             case (EXT_MATCH): {
             
             
-            
+                break;
             
             
             }

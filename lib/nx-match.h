@@ -26,6 +26,13 @@
 #include "oflib-exp/ofl-exp-match.h"
 
 
+struct nxm_field {
+    struct hmap_node hmap_node;
+    uint32_t header;                  /* TLV_* value. */
+    uint8_t *value;
+    uint8_t * mask;
+};
+
 //typedef unsigned int __attribute__((bitwise)) flow_wildcards_t;
 
 /* Nicira Extended Match (NXM) flexible flow match helper functions.

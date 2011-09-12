@@ -35,6 +35,7 @@
 #include "dp_actions.h"
 #include "flow_table.h"
 #include "flow_entry.h"
+#include "flow_hmap.h"
 #include "group_table.h"
 #include "group_entry.h"
 #include "oflib/ofl-messages.h"
@@ -42,10 +43,12 @@
 #include "oflib-exp/ofl-exp-match.h"
 #include "oflib/ofl-actions.h"
 #include "oflib/ofl-utils.h"
+#include "bj_hash.h"
 #include "packets.h"
 #include "timeval.h"
 #include "util.h"
 #include "match_std.h"
+#include "nx-match.h"
 
 #include "vlog.h"
 #define LOG_MODULE VLM_flow_e
@@ -235,9 +238,13 @@ make_mod_match(struct ofl_match_header *match) {
             return (struct ofl_match_header *)m;
         }
         case (EXT_MATCH):{
-                    
-                
-                return (struct ofl_match_header *)match;
+                struct ofl_ext_match *m = (struct ofl_ext_match *) match;
+                struct flow_hmap *fm = (struct flow_hmap*) malloc(sizeof(struct flow_hmap));
+                flow_hmap_init(fm);
+                flow_hmap_create(fm, m);
+                struct nxm_field *nx;
+                              
+                return (struct ofl_match_header *) fm;
                     
         }
         default: VLOG_WARN_RL(LOG_MODULE, &rl, "Flow entry has unknown match type.");
@@ -329,7 +336,6 @@ ext_flow_entry_create(struct datapath *dp, struct flow_table *table, struct ofl_
     entry->stats->instructions     = mod->instructions;
 
     entry->match = make_mod_match(mod->match);
-
     entry->created      = now;
     entry->remove_at    = mod->hard_timeout == 0 ? 0
                                   : now + mod->hard_timeout * 1000;
@@ -374,7 +380,6 @@ flow_entry_create(struct datapath *dp, struct flow_table *table, struct ofl_msg_
     entry->stats->instructions     = mod->instructions;
 
     entry->match = make_mod_match(mod->match);
-
     entry->created      = now;
     entry->remove_at    = mod->hard_timeout == 0 ? 0
                                   : now + mod->hard_timeout * 1000;
@@ -395,10 +400,13 @@ void
 flow_entry_destroy(struct flow_entry *entry) {
     // NOTE: This will be called when the group entry itself destroys the
     //       flow; but it won't be a problem.
+
+    uint16_t type = entry->match->type;
     del_group_refs(entry);
     ofl_structs_free_flow_stats(entry->stats, entry->dp->exp);
     // assumes it is a standard match
-    free(entry->match);
+    if(type == OFPMT_STANDARD)
+        free(entry->match);
     free(entry);
 }
 

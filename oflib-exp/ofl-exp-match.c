@@ -133,12 +133,11 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
             int i;
             uint32_t header;
             unsigned length;
-            
             struct ofl_ext_match *m = (struct ofl_ext_match *)match;
             void *p = m->match_fields.entries;
             fprintf(stream, "extended_match{");
             for (i = 0; i < m->match_fields.total; i++){
-                header = ext_entry_ok(p,m->match_fields.size);
+		header = ext_entry_ok(p,m->match_fields.size);
                 length = NXM_LENGTH(header);
                 switch(header){
                     case (TLV_EXT_IN_PORT):{

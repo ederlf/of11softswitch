@@ -44,12 +44,7 @@ enum nxm_field_index {
     N_TLV_FIELDS
 };
 
-struct nxm_field {
-    struct hmap_node hmap_node;
-    uint32_t header;                  /* TLV_* value. */
-    uint8_t *value;
-    uint8_t * mask;
-};
+
 
 
 /* Possible masks for TLV_EXT_DL_DST_W. */
@@ -332,9 +327,12 @@ ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
         f->value = p + 4;
         if (NXM_HASMASK(header))
             f->mask = p + 4 + length / 2;
-        else memset(f->mask,0xf,length);
+        else {
+            f->mask = malloc(length);
+            memset(f->mask,0xf,length);
+            }
         hmap_insert(match_dst, &f->hmap_node,
-                        hash_int(f->header, 0));      
+                        hash_int(f->header, 0)); 
         p += 4 + length;
         match_len -= 4 + length;
     }
@@ -558,11 +556,5 @@ nxm_put_ipv6(struct ofpbuf *b, uint32_t header,
     }
 }*/
 
-/*
-int 
-ext_pull_match(struct ofpbuf *, unsigned int match_len, uint16_t priority){
-
-
-}*/
 
 

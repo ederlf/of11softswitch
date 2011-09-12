@@ -255,7 +255,7 @@
  * Prereqs: None.
  *
  * Format: 16-bit integer. */
-#define    TLV_EXT_IN_PORT NXM_HEADER  (0x0000, 0, 16) 
+#define    TLV_EXT_IN_PORT NXM_HEADER  (0x0000, 0, 4) 
 
 /* VLAN id. */
 #define    TLV_EXT_DL_VLAN NXM_HEADER  (0x0000, 1, 2) 

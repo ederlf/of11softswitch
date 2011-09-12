@@ -1099,6 +1099,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             }    
             else {
                 uint32_t port;
+                printf("LENGTH %d\n", NXM_LENGTH(TLV_EXT_IN_PORT));
                 parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &port);
                 ext_put_32(&ext_m->match_fields, TLV_EXT_IN_PORT, port);
                 ext_m->header.length += 8;
