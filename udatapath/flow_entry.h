@@ -70,12 +70,12 @@ struct packet;
 
 /* Returns true if the flow entry matches the match in the extended flow mod message. */
 bool
-ext_flow_entry_matches(struct flow_entry *entry, struct ofl_ext_flow_mod *mod, bool strict);
+ext_flow_entry_matches(struct flow_entry *entry, struct ofl_ext_flow_mod *mod, bool strict, bool check_cookie);
 
 
 /* Returns true if the flow entry matches the match in the flow mod message. */
 bool
-flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool strict);
+flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool strict, bool check_cookie);
 
 /* Returns true if the flow entry overlaps with the match in the extended flow mod message. */
 bool

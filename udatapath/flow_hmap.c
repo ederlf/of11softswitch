@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include "flow_hmap.h"
+#include "../lib/bj_hash.h"
 #include "../oflib/ofl-structs.h"
 #include "../oflib-exp/ofl-exp-match.h"
 #include "../lib/hmap.h"
@@ -50,5 +51,4 @@ flow_hmap_create(struct flow_hmap * flow_map , struct ofl_ext_match  *match){
 
     memcpy(&flow_map->header,&match->header, sizeof(struct ofl_match_header ));
     ext_pull_match(match, &flow_map->flow_fields);    
-
 }

@@ -100,8 +100,12 @@ flow_entry_has_out_group(struct flow_entry *entry, uint32_t group) {
 }
 
 bool
-ext_flow_entry_matches(struct flow_entry *entry, struct ofl_ext_flow_mod *mod, bool strict){
+ext_flow_entry_matches(struct flow_entry *entry, struct ofl_ext_flow_mod *mod, bool strict , bool check_cookie){
 
+     if (check_cookie && ((entry->stats->cookie & mod->cookie_mask) != (mod->cookie & mod->cookie_mask))) {
+        return false;
+ 	 }
+    
        if (strict) {
         return (entry->stats->priority == mod->priority) &&
                match_ext_strict((struct ofl_ext_match *)entry->stats->match,
@@ -114,7 +118,12 @@ ext_flow_entry_matches(struct flow_entry *entry, struct ofl_ext_flow_mod *mod, b
 }
 
 bool
-flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool strict) {
+flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool strict, bool check_cookie) {
+    
+    if (check_cookie && ((entry->stats->cookie & mod->cookie_mask) != (mod->cookie & mod->cookie_mask))) {
+        return false;
+ 	 }
+    
     if (strict) {
         return (entry->stats->priority == mod->priority) &&
                match_std_strict((struct ofl_match_standard *)entry->stats->match,
@@ -136,7 +145,7 @@ flow_entry_overlaps(struct flow_entry *entry, struct ofl_msg_flow_mod *mod) {
     return (entry->stats->priority == mod->priority &&
             (mod->out_port == OFPP_ANY || flow_entry_has_out_port(entry, mod->out_port)) &&
             (mod->out_group == OFPG_ANY || flow_entry_has_out_group(entry, mod->out_group)) &&
-            flow_entry_matches(entry, mod, false));
+            flow_entry_matches(entry, mod, false, true));
 }
 
 
@@ -238,12 +247,12 @@ make_mod_match(struct ofl_match_header *match) {
             return (struct ofl_match_header *)m;
         }
         case (EXT_MATCH):{
+                
                 struct ofl_ext_match *m = (struct ofl_ext_match *) match;
                 struct flow_hmap *fm = (struct flow_hmap*) malloc(sizeof(struct flow_hmap));
                 flow_hmap_init(fm);
                 flow_hmap_create(fm, m);
-                struct nxm_field *nx;
-                              
+                      
                 return (struct ofl_match_header *) fm;
                     
         }
