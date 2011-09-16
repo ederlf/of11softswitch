@@ -56,6 +56,6 @@ int initialize_nb_engine();
 #ifdef __cplusplus
 extern "C"
 #endif
-int convertpkt_test(const unsigned char* pkt_in, struct packet_out * pkt_out);
+//int convertpkt_test(const unsigned char* pkt_in, struct packet_out * pkt_out);
 
 #endif /* TEST_HPP_ */
