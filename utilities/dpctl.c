@@ -1201,7 +1201,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 if (parse16(token + strlen(MATCH_DL_VLAN KEY_VAL), NULL, 0, 0xffff, &dl_vlan))
                     ofp_fatal(0, "Error parsing dl_vlan label: %s.", token);
                 if( (wildcards & OFPFW_DL_VLAN) != 0){
-                    uint16_t mask = 0x0000;
+                    uint16_t mask = 0xffff;
                     ext_put_16w(&ext_m->match_fields, TLV_EXT_DL_VLAN_W, dl_vlan, mask);
                     ext_m->header.length += 2;   
                 }
@@ -1225,7 +1225,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                     ofp_fatal(0, "Error parsing dl_vlan_pcp: %s.", token);
                 }
                 if( (wildcards & OFPFW_DL_VLAN_PCP) != 0){
-                    uint8_t mask = 0x00;
+                    uint8_t mask = 0xff;
                     ext_put_8w(&ext_m->match_fields, TLV_EXT_DL_VLAN_PCP_W, dl_vlan_pcp, mask);
                     ext_m->header.length += 1;   
                 }
@@ -1248,7 +1248,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 if (parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &dl_type))
                     ofp_fatal(0, "Error parsing dl_type: %s.", token);
                 if( (wildcards & OFPFW_DL_TYPE) != 0){
-                    uint16_t mask = 0x0000;
+                    uint16_t mask = 0xffff;
                     ext_put_16w(&ext_m->match_fields, TLV_EXT_DL_TYPE_W, dl_type, mask);
                     ext_m->header.length += 2;   
                 }
@@ -1272,7 +1272,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                     ofp_fatal(0, "Error parsing nw_tos: %s.", token);
                 }
                 if( (wildcards & OFPFW_NW_TOS) != 0){
-                    uint8_t mask = 0x00;
+                    uint8_t mask = 0xff;
                     ext_put_8w(&ext_m->match_fields, TLV_EXT_NW_TOS_W, nw_tos, mask);
                     ext_m->header.length += 1;   
                 }
@@ -1295,7 +1295,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                     ofp_fatal(0, "Error parsing nw_proto: %s.", token);
                 }
                 if( (wildcards & OFPFW_NW_PROTO) != 0){
-                    uint8_t mask = 0x00;
+                    uint8_t mask = 0xff;
                     ext_put_8w(&ext_m->match_fields, TLV_EXT_NW_PROTO_W, nw_tos, mask);
                     ext_m->header.length += 1;   
                 }
@@ -1385,7 +1385,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 if (parse16(token + strlen(MATCH_TP_SRC KEY_VAL), NULL, 0, 0xffff, &tp_src))
                     ofp_fatal(0, "Error parsing dl_type: %s.", token);
                 if( (wildcards & OFPFW_TP_SRC) != 0){
-                    uint16_t mask = 0x0000;
+                    uint16_t mask = 0xffff;
                     ext_put_16w(&ext_m->match_fields, TLV_EXT_TP_SRC_W, tp_src, mask);
                     ext_m->header.length += 2;   
                 }
@@ -1408,7 +1408,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 if (parse16(token + strlen(MATCH_TP_DST KEY_VAL), NULL, 0, 0xffff, &tp_dst))
                     ofp_fatal(0, "Error parsing dl_type: %s.", token);
                 if( (wildcards & OFPFW_TP_DST) != 0){
-                    uint16_t mask = 0x0000;
+                    uint16_t mask = 0xffff;
                     ext_put_16w(&ext_m->match_fields, TLV_EXT_TP_DST_W, tp_dst, mask);
                     ext_m->header.length += 2;   
                 }
@@ -1450,7 +1450,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                     ofp_fatal(0, "Error parsing nw_tos: %s.", token);
                 }
                 if( (wildcards & OFPFW_NW_TOS) != 0){
-                    uint8_t mask = 0x00;
+                    uint8_t mask = 0xff;
                     ext_put_8w(&ext_m->match_fields, TLV_EXT_MPLS_TC_W, mpls_tc, mask);
                     ext_m->header.length += 1;   
                 }
@@ -2177,8 +2177,6 @@ parse_vlan_vid(char *str, uint16_t *vid) {
 
 
 
-
-
 static int
 parse8(char *str, struct names8 *names, size_t names_num, uint8_t max, uint8_t *val) {
     size_t i;
@@ -2276,8 +2274,8 @@ str_to_ipv6(const char *str_, struct in6_addr *addrp, struct in6_addr *maskp)
     }
 
     free(str);
-}*/
-
+}
+*/
 
 const char *
 ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format)

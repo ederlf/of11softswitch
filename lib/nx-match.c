@@ -187,7 +187,6 @@ mod_match(struct hmap * flow ){
 }
    
 
-
 int 
 ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
 {
@@ -210,8 +209,9 @@ ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
         }
         else {
             f->mask = malloc(length);
-            memset(f->mask,0xf,length);
+            memset(f->mask,0x0,length);
             }
+        f->length = length;    
         hmap_insert(match_dst, &f->hmap_node,
                         hash_int(f->header, 0));
     

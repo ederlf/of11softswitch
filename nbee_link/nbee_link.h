@@ -37,18 +37,16 @@ struct ipv6pkt {
 
 };
 
-typedef struct packet_field{
-	list_t node;
-	uint8_t* value;
-}packet_out_t;
+typedef struct field_values {
+       list_t list_node;
+       uint8_t* value;
+}field_values_t;
 
-struct packet_out{
-
-    struct hmap_node hmap_node;
-    uint32_t header;                  /* NXM_* value. */
-    struct packet_field field;              /* Field Value */
-
-};
+typedef struct packet_fields{
+       struct hmap_node hmap_node;
+           uint32_t header;                  /* NXM_* value. */
+           list_t fields;              /* List of field values (In one packet, there may be more than one value per field) */
+}packet_fields_t;
 
 #ifdef __cplusplus
 extern "C"

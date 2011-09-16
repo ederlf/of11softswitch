@@ -29,6 +29,7 @@
 struct nxm_field {
     struct hmap_node hmap_node;
     uint32_t header;                  /* TLV_* value. */
+    uint32_t length;                  /* Value size. */
     uint8_t *value;
     uint8_t * mask;
 };

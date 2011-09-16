@@ -78,24 +78,26 @@ flow_table_add(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool chec
         if (check_overlap && flow_entry_overlaps(entry, mod)) {
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_OVERLAP);
         }
+        if (entry->match->type == OFPMT_STANDARD){    
+            /* if the entry equals, replace the old one */
+            if (flow_entry_matches(entry, mod, true, false/*check_cookie*/)) {
+                new_entry = flow_entry_create(table->dp, table, mod);
+                *match_kept = true;
+                *insts_kept = true;
 
-        /* if the entry equals, replace the old one */
-        if (flow_entry_matches(entry, mod, true, false/*check_cookie*/)) {
-            new_entry = flow_entry_create(table->dp, table, mod);
-            *match_kept = true;
-            *insts_kept = true;
-
-            /* NOTE: no flow removed message should be generated according to spec. */
-            list_replace(&new_entry->match_node, &entry->match_node);
-            list_remove(&entry->hard_node);
-            list_remove(&entry->idle_node);
-            flow_entry_destroy(entry);
-            add_to_timeout_lists(table, new_entry);
-            return 0;
-        }
-
-        if (mod->priority < entry->stats->priority) {
-            break;
+                /* NOTE: no flow removed message should be generated according to spec. */
+                list_replace(&new_entry->match_node, &entry->match_node);
+                list_remove(&entry->hard_node);
+                list_remove(&entry->idle_node);
+                flow_entry_destroy(entry);
+                add_to_timeout_lists(table, new_entry);
+                return 0;
+            }
+        
+        
+            if (mod->priority < entry->stats->priority) {
+                break;
+            }
         }
     }
 
@@ -119,31 +121,39 @@ static ofl_err
 flow_table_ext_add(struct flow_table *table, struct ofl_ext_flow_mod *mod, bool check_overlap, bool *match_kept, bool *insts_kept) {
     // Note: new entries will be placed behind those with equal priority
     struct flow_entry *entry, *new_entry;
-
+    int i = 0;
     LIST_FOR_EACH (entry, struct flow_entry, match_node, &table->match_entries) {
         
         /*TODO Check overlaps 
         if (check_overlap && ext_flow_entry_overlaps(entry, mod)) {
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_OVERLAP);
         }*/
+        
+        printf("TYPE %d\n", entry->match->type );
+        if (entry->match->type == EXT_MATCH){
+            i++;
+            printf("TOTAL %d\n", i);
+            /* if the entry equals, replace the old one */
+            if (ext_flow_entry_matches(entry, mod, true, false/*check_cookie*/)) {
+                printf("EQUALS\n");
+                new_entry = ext_flow_entry_create(table->dp, table, mod);
+                *match_kept = true;
+                *insts_kept = true;
 
-        /* if the entry equals, replace the old one */
-        if (ext_flow_entry_matches(entry, mod, true, false/*check_cookie*/)) {
-            new_entry = ext_flow_entry_create(table->dp, table, mod);
-            *match_kept = true;
-            *insts_kept = true;
-
-            /* NOTE: no flow removed message should be generated according to spec. */
-            list_replace(&new_entry->match_node, &entry->match_node);
-            list_remove(&entry->hard_node);
-            list_remove(&entry->idle_node);
-            flow_entry_destroy(entry);
-            add_to_timeout_lists(table, new_entry);
-            return 0;
-        }
-
-        if (mod->priority < entry->stats->priority) {
-            break;
+                /* NOTE: no flow removed message should be generated according to spec. */
+                list_replace(&new_entry->match_node, &entry->match_node);
+                list_remove(&entry->hard_node);
+                list_remove(&entry->idle_node);
+                flow_entry_destroy(entry);
+                add_to_timeout_lists(table, new_entry);
+                return 0;
+            }
+        
+        
+            if (mod->priority < entry->stats->priority) {
+                break;
+            }
+    
         }
     }
 

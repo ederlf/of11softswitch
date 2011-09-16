@@ -49,5 +49,7 @@ void drain_fd(int fd, size_t n_packets);
 int make_unix_socket(int style, bool nonblock, bool passcred,
                      const char *bind_path, const char *connect_path);
 int get_unix_name_len(socklen_t sun_len);
+int lookup_ip(const char *host_name, struct in_addr *address);
+int lookup_ipv6(const char *host_name, struct in6_addr *address);
 
 #endif /* socket-util.h */

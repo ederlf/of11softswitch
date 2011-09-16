@@ -31,9 +31,44 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include "lib/bj_hash.h"
 #include "lib/nx-match.h"
+#include "nbee_link/nbee_link.h"
 #include "match_ext.h"
 #include "oflib-exp/ofl-exp-match.h"
+
+
+bool 
+packet_match(struct hmap *a, struct hmap *b){
+
+    struct nxm_field *f;
+    packet_fields_t *packet_f = NULL;
+    uint8_t *flow_value;
+    uint8_t *pkt_value;
+    uint8_t *mask;
+    
+    HMAP_FOR_EACH(f, struct nxm_field, hmap_node, a){
+        field_values_t *values;
+        HMAP_FOR_EACH_WITH_HASH(packet_f, struct nxm_field, hmap_node, hash_int(f->header, 0), b){
+            LIST_T_FOR_EACH(values, field_values_t, list_node, packet_f->fields){
+                flow_value = malloc(length);
+                pkt_value = malloc(length);
+                mask = malloc(length);
+                flow_value = f->value;
+                pkt_value = packet_f->value;
+                mask = f->mask;
+                if ((~(*mask) & (*flow_value^ *pkt_value)) !=0)
+                    return false;
+                
+            }
+        } 
+        if (f == NULL)
+            return false;
+    }
+    return true;
+
+}
+
 
 bool
 match_ext_strict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
@@ -44,10 +79,14 @@ match_ext_strict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
     uint8_t * p1 =  a->match_fields.entries;
     uint8_t * p2 =  b->match_fields.entries;
     uint32_t header1, header2;  
+    uint8_t found;
+    
+    if(a->match_fields.total != b->match_fields.total)
+        return false;
     
     for(i = 0; i < a->match_fields.total; i++){
          memcpy(&header1, p1, 4);
-         uint8_t found = 0;
+         found = 0;
          unsigned int len1 = NXM_LENGTH(header1); 
          for(j = 0; j < b->match_fields.total; j++){     
             memcpy(&header2, p2, 4);
@@ -75,6 +114,40 @@ match_ext_strict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
     }
     return match;
     
+}
+
+/* Returns true if two values of 8 bit size match, considering their masks. */
+static bool
+sized8_matches(uint8_t *a, uint8_t *am, uint8_t *b, uint8_t *bm) {
+    return (((~am[0] & ~bm[0] & (a[0] ^ b[0])) == 0x00));
+}            
+
+/* Returns true if two values of 16 bit size match, considering their masks. */
+static bool
+sized16_matches(uint8_t *a, uint8_t *am, uint8_t *b, uint8_t *bm) {
+    return (((~am[0] & ~bm[0] & (a[0] ^ b[0])) == 0x00) &&
+            ((~am[1] & ~bm[1] & (a[1] ^ b[1])) == 0x00));
+
+/* Returns true if two values of 32 bit size match, considering their masks. */
+static bool
+sized32_matches(uint8_t *a, uint8_t *am, uint8_t *b, uint8_t *bm) {
+    return (((~am[0] & ~bm[0] & (a[0] ^ b[0])) == 0x00) &&
+            ((~am[1] & ~bm[1] & (a[1] ^ b[1])) == 0x00) &&
+            ((~am[2] & ~bm[2] & (a[2] ^ b[2])) == 0x00) &&
+            ((~am[3] & ~bm[3] & (a[3] ^ b[3])) == 0x00));
+}
+
+/* Returns true if two values of 32 bit size match, considering their masks. */
+static bool
+sized64_matches(uint8_t *a, uint8_t *am, uint8_t *b, uint8_t *bm) {
+    return (((~am[0] & ~bm[0] & (a[0] ^ b[0])) == 0x00) &&
+            ((~am[1] & ~bm[1] & (a[1] ^ b[1])) == 0x00) &&
+            ((~am[2] & ~bm[2] & (a[2] ^ b[2])) == 0x00) &&
+            ((~am[3] & ~bm[3] & (a[3] ^ b[3])) == 0x00) &&
+            ((~am[4] & ~bm[4] & (a[4] ^ b[4])) == 0x00) &&
+            ((~am[5] & ~bm[5] & (a[5] ^ b[5])) == 0x00) &&
+            ((~am[6] & ~bm[6] & (a[6] ^ b[6])) == 0x00) &&
+            ((~am[7] & ~bm[7] & (a[7] ^ b[7])) == 0x00));
 }
 
 /* Returns true if the two ethernet addresses match, considering their masks. */
