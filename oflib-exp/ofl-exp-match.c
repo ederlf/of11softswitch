@@ -141,7 +141,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
             uint32_t header;
             unsigned length;
             struct ofl_ext_match *m = (struct ofl_ext_match *)match;
-            void *p = m->match_fields.entries;
+            uint8_t *p = (uint8_t *) m->match_fields.entries;
             fprintf(stream, "extended_match{");
             for (i = 0; i < m->match_fields.total; i++){
 		        header = ext_entry_ok(p,m->match_fields.size);
@@ -150,7 +150,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
 		            header = NXM_HEADER( NXM_VENDOR(header), NXM_FIELD(header), NXM_LENGTH(header)/2);
                 switch(header){
                     case (TLV_EXT_IN_PORT):{
-                        uint32_t *value = p + 4;
+                        uint32_t *value = (uint32_t*) p + 4;
                         /*Check for byte order */
                         fprintf(stream, " port=\"");   
                         ofl_port_print(stream, *value);
@@ -171,7 +171,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                         break;
                     }  
                     case (TLV_EXT_DL_VLAN): {
-                        uint16_t *value = p + 4;
+                        uint16_t *value = (uint16_t*) p + 4;
                         fprintf(stream, " dl_vlan=\"0x%"PRIx16"\"", *value); 
                         p += length + 4; 
                         break;
@@ -185,7 +185,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                     
                     }
                     case (TLV_EXT_DL_TYPE): {
-                        uint16_t *value = p + 4;
+                        uint16_t *value = (uint16_t*) p + 4;
                         fprintf(stream, " dl_type=\"0x%"PRIx16"\"", *value); 
                         p += length + 4; 
                         break;
@@ -218,27 +218,27 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                     
                     }
                     case (TLV_EXT_TP_SRC): {
-                        uint16_t *value = p + 4;
+                        uint16_t *value = (uint16_t*) p + 4;
                         fprintf(stream, " tp_src=\"%"PRIx16"\"", *value); 
                         p += length + 4; 
                         break;      
                     }
                    case (TLV_EXT_TP_DST): {
-                        uint16_t *value = p + 4;
+                        uint16_t *value = (uint16_t*) p + 4;
                         fprintf(stream, " tp_dst=\"%"PRIx16"\"", *value); 
                         p += length + 4; 
                         break;
                     
                     }
                     case (TLV_EXT_MPLS_LABEL): {
-                        uint32_t *value = p + 4;
+                        uint32_t *value = (uint32_t*) p + 4;
                         fprintf(stream, " mpls_label=\"%"PRIx32"\"", *value); 
                         p += length + 4; 
                         break;
                     
                     }
                     case (TLV_EXT_MPLS_TC): {
-                        uint32_t *value = p + 4;
+                        uint32_t *value = (uint32_t*) p + 4;
                         fprintf(stream, " mpls_tc=\"%"PRIx32"\"", *value); 
                         p += length + 4; 
                         break;

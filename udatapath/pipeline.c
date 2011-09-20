@@ -216,7 +216,7 @@ pipeline_handle_ext_flow_mod(struct pipeline *pl, struct ofl_ext_flow_mod *msg,
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_TABLE_ID);
         }
     } else {
-        error = flow_table_flow_mod(pl->tables[msg->table_id], &msg->header, &match_kept, &insts_kept);
+        error = flow_table_flow_mod(pl->tables[msg->table_id], &msg->header.header.header, &match_kept, &insts_kept);
         if (error) {
             return error;
         }
@@ -234,7 +234,7 @@ pipeline_handle_ext_flow_mod(struct pipeline *pl, struct ofl_ext_flow_mod *msg,
             }
         }
 
-        ofl_msg_free_flow_mod(msg, !match_kept, !insts_kept, pl->dp->exp);
+        ofl_ext_free_flow_mod(msg, !match_kept, !insts_kept, pl->dp->exp);
         return 0;
     }          
 }

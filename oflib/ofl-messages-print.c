@@ -350,7 +350,7 @@ static void
 ofl_msg_print_stats_reply_table(struct ofl_msg_stats_reply_table *msg, FILE *stream) {
     size_t i;
 
-    fprintf(stream, ", stats=[");
+    fprintf(stream, ",\nstats=[");
 
     for (i=0; i<msg->stats_num; i++) {
         ofl_structs_table_stats_print(stream, msg->stats[i]);

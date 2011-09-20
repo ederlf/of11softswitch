@@ -98,11 +98,13 @@ ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *bu
         switch (exp->type) {
             case (EXT_FLOW_MOD):{
                 struct ofl_ext_flow_mod *fm = (struct ofl_ext_flow_mod*) exp;
-                error = ofl_msg_ext_pack_flow_mod(fm, buf, buf_len);            
+                error = ofl_msg_ext_pack_flow_mod(fm, buf, buf_len); 
+                break;           
             }
             case (EXT_FLOW_REMOVED):{
-                //return ofl_msg_ext_pack_flow_removed(exp, buf, buf_len);
-                
+                struct ofl_ext_flow_removed *fr = (struct ofl_ext_flow_removed*) exp;
+                error = ofl_msg_ext_pack_flow_removed(fr, buf, buf_len);
+                break;
             }
         
         }
@@ -115,15 +117,14 @@ ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *bu
      return error;
 } 
 
-/*
 int
-ofl_msg_ext_pack_flow_removed(struct ofl_nx_flow_removed *msg, uint8_t **buf, size_t *buf_len) {
-    struct nx_flow_removed *ofr;
+ofl_msg_ext_pack_flow_removed(struct ofl_ext_flow_removed *msg, uint8_t **buf, size_t *buf_len) {
+    struct ofp_ext_flow_removed *ofr;
 
-    *buf_len = sizeof(struct nx_flow_removed);
+    *buf_len = sizeof(struct ofp_ext_flow_removed) + msg->match->length - 4;
     *buf     = (uint8_t *)malloc(*buf_len);
 
-    ofr = (struct nx_flow_removed *)(*buf);
+    ofr = (struct ofp_ext_flow_removed *)(*buf);
     ofr->cookie        = hton64(msg->cookie);
     ofr->priority      = hton64(msg->priority);
     ofr->reason        =        msg->reason;
@@ -138,4 +139,4 @@ ofl_msg_ext_pack_flow_removed(struct ofl_nx_flow_removed *msg, uint8_t **buf, si
     ofl_exp_match_pack(msg->match, &(ofr->match.header));
 
     return 0;
-}*/
+}
