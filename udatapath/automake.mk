@@ -40,6 +40,8 @@ udatapath_ofdatapath_SOURCES = \
 	udatapath/packet.h \
 	udatapath/packet_handle_std.c \
 	udatapath/packet_handle_std.h \
+	udatapath/packet_handle_ext.c \
+	udatapath/packet_handle_ext.h \
 	udatapath/pipeline.c \
 	udatapath/pipeline.h \
 	udatapath/udatapath.c

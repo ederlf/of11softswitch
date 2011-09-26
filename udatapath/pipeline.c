@@ -49,6 +49,8 @@
 #include "util.h"
 #include "vlog.h"
 
+#include "../nbee_link/nbee_link.h"
+
 #define LOG_MODULE VLM_pipeline
 
 static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(60, 60);
@@ -71,6 +73,8 @@ pipeline_create(struct datapath *dp) {
         pl->tables[i] = flow_table_create(dp, i);
     }
     pl->dp = dp;
+
+    nbee_link_initialize();
 
     return pl;
 }
@@ -216,7 +220,7 @@ pipeline_handle_ext_flow_mod(struct pipeline *pl, struct ofl_ext_flow_mod *msg,
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_TABLE_ID);
         }
     } else {
-        error = flow_table_flow_mod(pl->tables[msg->table_id], &msg->header.header.header, &match_kept, &insts_kept);
+        error = flow_table_flow_mod(pl->tables[msg->table_id], &msg->header, &match_kept, &insts_kept);
         if (error) {
             return error;
         }
@@ -234,7 +238,7 @@ pipeline_handle_ext_flow_mod(struct pipeline *pl, struct ofl_ext_flow_mod *msg,
             }
         }
 
-        ofl_ext_free_flow_mod(msg, !match_kept, !insts_kept, pl->dp->exp);
+        ofl_msg_free_flow_mod(msg, !match_kept, !insts_kept, pl->dp->exp);
         return 0;
     }          
 }

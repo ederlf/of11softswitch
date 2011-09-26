@@ -34,7 +34,7 @@
 #include "lib/bj_hash.h"
 #include "lib/nx-match.h"
 #include "lib/list_t.h"
-#include "match-ext.h"
+#include "match_ext.h"
 #include "nbee_link/nbee_link.h"
 #include "oflib-exp/ofl-exp-match.h"
 

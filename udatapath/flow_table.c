@@ -224,6 +224,7 @@ flow_table_ext_modify(struct flow_table *table, struct ofl_ext_flow_mod *mod, bo
 static ofl_err
 flow_table_delete(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool strict) {
     struct flow_entry *entry, *next;
+
     LIST_FOR_EACH_SAFE (entry, next, struct flow_entry, match_node, &table->match_entries) {
         if (flow_entry_matches(entry, mod, strict, true /*check_cookie*/)) {
             flow_entry_remove(entry, OFPRR_DELETE);

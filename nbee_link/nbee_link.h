@@ -5,8 +5,8 @@
  *      Author: rdenicol
  */
 
-#ifndef TEST_HPP_
-#define TEST_HPP_
+#ifndef NBEE_LINK_H_
+#define NBEE_LINK_H_
 
 #include <stdio.h>
 #include <stdint.h>
@@ -51,11 +51,11 @@ typedef struct packet_fields{
 #ifdef __cplusplus
 extern "C"
 #endif
-int initialize_nb_engine();
+int nbee_link_initialize();
 
 #ifdef __cplusplus
 extern "C"
 #endif
-//int convertpkt_test(const unsigned char* pkt_in, struct packet_out * pkt_out);
+int nbee_link_convertpkt(const unsigned char* pkt_in, struct hmap * pkt_out);
 
-#endif /* TEST_HPP_ */
+#endif /* NBEE_LINK_H_ */
