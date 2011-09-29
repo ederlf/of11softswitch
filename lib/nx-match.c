@@ -211,7 +211,7 @@ ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
             f->mask = malloc(length);
             memset(f->mask,0x0,length);
             }
-        f->length = length;    
+        f->length = length;
         hmap_insert(match_dst, &f->hmap_node,
                         hash_int(f->header, 0));
     

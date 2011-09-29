@@ -40,6 +40,7 @@ struct ipv6pkt {
 
 typedef struct field_values {
        list_t list_node;
+       uint32_t len;
        uint8_t* value;
 }field_values_t;
 

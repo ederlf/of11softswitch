@@ -104,38 +104,34 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 
 	while (1)
         {
-//		uint8_t i;
- //       	for (i=0;i<3;i++)
-//		{
-//			printf("%c",proto->Name[i]);
-//		}
-//		printf("\n");
-        	field = proto->FirstField;
-              	while(1)
-               	{
+
+        field = proto->FirstField;
+        while(1)
+        {
 
 			printf("\nfield position %ld,  %s :",field->Position,*field);
 			
 			if((char)field->LongName[0]<58 && (char)field->LongName[0]>47)
-                        {
-	                        int i,pow;
-                                uint32_t type;
-                                uint8_t size;
+            {
+	            int i,pow;
+                uint32_t type;
+                uint8_t size;
 				packet_fields_t * pktout_field;
-		                pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
+		        pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
 				
-                                field_values_t *new_field;
-                                new_field = (field_values_t *)malloc(sizeof(field_values_t));
+                field_values_t *new_field;
+                new_field = (field_values_t *)malloc(sizeof(field_values_t));
 
-                                for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
-        	                        type = type + (pow*(field->LongName[i]-48));
+                for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
+        	        type = type + (pow*(field->LongName[i]-48));
 		                        
 				size = field->Size;
 
-                                pktout_field->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),size); 
-                                printf("\n Header ID: %d",pktout_field->header);
-                                new_field->value = (uint8_t*) malloc(field->Size);
-                                memcpy(new_field->value,((uint8_t*)pktin->data + field->Position),field->Size);
+                pktout_field->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),size); 
+                printf("\n Header ID: %d",pktout_field->header);
+                new_field->value = (uint8_t*) malloc(field->Size);
+                new_field->len = field->Size;
+                memcpy(new_field->value,((uint8_t*)pktin->data + field->Position),field->Size);
 
 				printf("\n\nField %s value: ",field->LongName);
 
@@ -164,9 +160,8 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 				{
 					list_t_init(&pktout_field->fields);
 					printf("\nNew Hash Map");
-                                	list_t_push_back(&pktout_field->fields,&new_field->list_node);
-                                	hmap_insert(pktout, &pktout_field->hmap_node,
-	                        	hash_int(pktout_field->header, 0));
+                    list_t_push_back(&pktout_field->fields,&new_field->list_node);
+                    hmap_insert(pktout, &pktout_field->hmap_node,hash_int(pktout_field->header, 0));
 				}
 				done =0;
 
