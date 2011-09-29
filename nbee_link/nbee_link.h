@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "../lib/list_t.h"
 #include "../lib/hmap.h"
+#include "../lib/ofpbuf.h"
 
 #define ETHADDLEN 6
 #define IPV6ADDLEN 16
@@ -56,6 +57,6 @@ int nbee_link_initialize();
 #ifdef __cplusplus
 extern "C"
 #endif
-int nbee_link_convertpkt(const unsigned char* pkt_in, struct hmap * pkt_out);
+int nbee_link_convertpkt(struct ofpbuf * pkt_in, struct hmap * pkt_out);
 
 #endif /* NBEE_LINK_H_ */

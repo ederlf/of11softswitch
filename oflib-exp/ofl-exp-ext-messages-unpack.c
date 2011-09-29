@@ -59,7 +59,7 @@ ofl_ext_message_unpack(struct ofp_header *oh, size_t *len, struct ofl_msg_experi
      
         }
         case(EXT_FLOW_REMOVED):{
-          //return ofl_ext_unpack_flow_removed(oh, len, msg);
+           // return ofl_ext_unpack_flow_removed(oh, len, msg);
         
         }
    }
@@ -98,7 +98,7 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     dm->flags =        ntohs( sm->flags);
 
 
-    uint8_t *buff = (uint8_t *) src;
+    uint8_t *buff = (uint8_t*) src;
     buff += (sizeof(struct ofp_ext_flow_mod) -4);
     struct ext_match *match;
     match = (struct ext_match *) buff;    
@@ -136,19 +136,19 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     return 0;
 }
 
-
+/*
 ofl_err
 ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_experimenter **msg) {
-    struct ofp_ext_flow_removed *sr;
-    struct ofl_ext_flow_removed *dr;
+    struct nx_flow_removed *sr;
+    struct ofl_nx_flow_removed *dr;
     ofl_err error;
 
-    if (*len < (sizeof(struct ofp_ext_flow_removed) - sizeof(struct ofp_match))) {
+    /*if (*len < (sizeof(struct ofp_flow_removed) - sizeof(struct ofp_match))) {
         OFL_LOG_WARN(LOG_MODULE, "Received FLOW_REMOVED message has invalid length (%zu).", *len);
         return OFL_ERROR;
-    }
+    }*
 
-    sr = (struct ofp_ext_flow_removed *) src;
+    sr = (struct nx_flow_removed *)src;
 
     if (sr->table_id == 0xff) {
         if (OFL_LOG_IS_WARN_ENABLED(LOG_MODULE)) {
@@ -158,9 +158,9 @@ ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_
         }
         return ofl_error(OFPET_BAD_ACTION, OFPBAC_BAD_ARGUMENT);
     }
-    *len -= (sizeof(struct ofp_ext_flow_removed) - 4 - sr->match.header.length);
+    *len -= (sizeof(struct nx_flow_removed) - sizeof(struct ofp_match));
 
-    dr = (struct ofl_ext_flow_removed *)malloc(sizeof(struct ofl_ext_flow_removed));
+    dr = (struct ofl_nx_flow_removed *)malloc(sizeof(struct ofl_nx_flow_removed));
     dr->reason = (enum ofp_flow_removed_reason)sr->reason;
 
     dr->table_id         =        sr->table_id;
@@ -178,9 +178,9 @@ ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_
         free(dr);
         return error;
     }
-    *msg = (struct ofl_msg_experimenter *)dr;
+    *msg = (struct ofl_msg_header *)dr;
     return 0;
-}
+}*/
 
 
 

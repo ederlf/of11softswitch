@@ -144,7 +144,7 @@ int
 ofl_msg_ext_pack_flow_removed(struct ofl_ext_flow_removed *msg, uint8_t **buf, size_t *buf_len);
 
 int
-ofl_msg_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len);
+ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len);
 
 int
 ofl_msg_pack_stats_reply_aggregate(struct ofl_msg_stats_reply_aggregate *msg, uint8_t **buf, size_t *buf_len);

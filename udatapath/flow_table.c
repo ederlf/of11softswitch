@@ -40,6 +40,7 @@
 #include "time.h"
 #include "packet_handle_std.h"
 #include "match_std.h"
+#include "match_ext.h"
 
 #include "vlog.h"
 #define LOG_MODULE VLM_flow_t
@@ -129,13 +130,10 @@ flow_table_ext_add(struct flow_table *table, struct ofl_ext_flow_mod *mod, bool 
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_OVERLAP);
         }*/
         
-        printf("TYPE %d\n", entry->match->type );
         if (entry->match->type == EXT_MATCH){
             i++;
-            printf("TOTAL %d\n", i);
             /* if the entry equals, replace the old one */
             if (ext_flow_entry_matches(entry, mod, true, false/*check_cookie*/)) {
-                printf("EQUALS\n");
                 new_entry = ext_flow_entry_create(table->dp, table, mod);
                 *match_kept = true;
                 *insts_kept = true;
@@ -318,7 +316,9 @@ flow_table_lookup(struct flow_table *table, struct packet *pkt) {
 
         /* select appropriate handler, based on match type of flow entry. */
         switch (m->type) {
+            
             case (OFPMT_STANDARD): {
+               
                 if (packet_handle_std_match(pkt->handle_std,
                                             (struct ofl_match_standard *)m)) {
                     entry->stats->byte_count += pkt->buffer->size;
@@ -332,8 +332,17 @@ flow_table_lookup(struct flow_table *table, struct packet *pkt) {
                 break;
             }
             case (EXT_MATCH): {
-            
-            
+                 printf("type found %d\n",m->type);
+                 if (packet_handle_ext_match(pkt->handle_ext,
+                                            (struct flow_hmap *)m)) {
+                    entry->stats->byte_count += pkt->buffer->size;
+                    entry->stats->packet_count++;
+                    entry->last_used = time_msec();
+
+                    table->stats->matched_count++;
+
+                    return entry;
+                }
                 break;
             
             

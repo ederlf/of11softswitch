@@ -98,13 +98,11 @@ ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *bu
         switch (exp->type) {
             case (EXT_FLOW_MOD):{
                 struct ofl_ext_flow_mod *fm = (struct ofl_ext_flow_mod*) exp;
-                error = ofl_msg_ext_pack_flow_mod(fm, buf, buf_len); 
-                break;           
+                error = ofl_msg_ext_pack_flow_mod(fm, buf, buf_len);            
             }
             case (EXT_FLOW_REMOVED):{
-                struct ofl_ext_flow_removed *fr = (struct ofl_ext_flow_removed*) exp;
-                error = ofl_msg_ext_pack_flow_removed(fr, buf, buf_len);
-                break;
+                //return ofl_msg_ext_pack_flow_removed(exp, buf, buf_len);
+                
             }
         
         }
@@ -117,14 +115,15 @@ ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *bu
      return error;
 } 
 
+/*
 int
-ofl_msg_ext_pack_flow_removed(struct ofl_ext_flow_removed *msg, uint8_t **buf, size_t *buf_len) {
-    struct ofp_ext_flow_removed *ofr;
+ofl_msg_ext_pack_flow_removed(struct ofl_nx_flow_removed *msg, uint8_t **buf, size_t *buf_len) {
+    struct nx_flow_removed *ofr;
 
-    *buf_len = sizeof(struct ofp_ext_flow_removed) + msg->match->length - 4;
+    *buf_len = sizeof(struct nx_flow_removed);
     *buf     = (uint8_t *)malloc(*buf_len);
 
-    ofr = (struct ofp_ext_flow_removed *)(*buf);
+    ofr = (struct nx_flow_removed *)(*buf);
     ofr->cookie        = hton64(msg->cookie);
     ofr->priority      = hton64(msg->priority);
     ofr->reason        =        msg->reason;
@@ -139,4 +138,32 @@ ofl_msg_ext_pack_flow_removed(struct ofl_ext_flow_removed *msg, uint8_t **buf, s
     ofl_exp_match_pack(msg->match, &(ofr->match.header));
 
     return 0;
-}
+}*/
+
+/*
+int
+ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len){
+
+    struct ofp_stats_request *req;
+    struct ofp_ext_flow_stats_request *stats;
+
+    *buf_len = sizeof(struct ofp_stats_request) + sizeof(struct ofp_flow_stats_request);
+    *buf     = (uint8_t *)malloc(*buf_len);
+
+    req = (struct ofp_stats_request *)(*buf);
+    stats = (struct ofp_flow_stats_request *)req->body;
+    stats->table_id    =        msg->table_id;
+    memset(stats->pad, 0x00, 3);
+    stats->out_port    = htonl( msg->out_port);
+    stats->out_group   = htonl( msg->out_group);
+    memset(stats->pad2, 0x00, 4);
+    stats->cookie      = hton64(msg->cookie);
+    stats->cookie_mask = hton64(msg->cookie_mask);
+
+    ofl_ext_match_pack(msg->match, &(stats->match.header), exp);
+
+    return 0;
+
+
+}*/
+

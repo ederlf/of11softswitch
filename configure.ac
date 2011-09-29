@@ -56,7 +56,7 @@ OFP_CHECK_HWTABLES
 OFP_CHECK_HWLIBS
 AC_SYS_LARGEFILE
 
-AC_CHECK_LIB([nbee_link],[initialize_nb_engine convertpkt_test])
+AC_CHECK_LIB([nbeelink],[nbee_link_initialize])
 
 AC_CHECK_FUNCS([strsignal])
 

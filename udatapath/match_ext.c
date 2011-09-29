@@ -46,7 +46,7 @@ packet_match(struct hmap *a, struct hmap *b){
     packet_fields_t *packet_f;
     uint8_t *flow_value;
     uint8_t *pkt_value;
-    uint8_t *mask;
+    uint8_t *mask; 
     field_values_t *values;
     
     HMAP_FOR_EACH(f, struct nxm_field, hmap_node, a){

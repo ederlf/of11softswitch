@@ -265,4 +265,3 @@ match_std_pkt(struct ofl_match_standard *a, struct ofl_match_standard *b) {
 		   pkt_wild8 (a->mpls_tc, b->mpls_tc, a->wildcards, OFPFW_MPLS_TC) &&
 		   pkt_mask64(a->metadata, b->metadata, a->metadata_mask);
 }
-
