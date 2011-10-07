@@ -32,7 +32,7 @@ extern "C" int nbee_link_initialize()
 	int NetPDLDecoderFlags = nbDECODER_GENERATEPDML_COMPLETE;
 	int ShowNetworkNames = 0;
 
-	char* NetPDLFileName = "customnetpdl.xml";
+	char NetPDLFileName[20] = "customnetpdl.xml";
 
 	pkhdr = new struct pcap_pkthdr;
 
@@ -78,7 +78,6 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 	//pkhdr->ts.tv_sec = 0;
 	pkhdr->caplen = pktin->size; //need this information
 	pkhdr->len = pktin->size; //need this information
-	printf("\nPacket size: %d \n",pktin->size);
 
 //	memset(curr_packet, 0x00,sizeof())
 	_nbPDMLPacket * curr_packet;
@@ -109,7 +108,6 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
         while(1)
         {
 
-			printf("\nfield position %ld,  %s :",field->Position,*field);
 			
 			if((char)field->LongName[0]<58 && (char)field->LongName[0]>47)
             {
@@ -128,28 +126,18 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 				size = field->Size;
 
                 pktout_field->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),size); 
-                printf("\n Header ID: %d",pktout_field->header);
                 new_field->value = (uint8_t*) malloc(field->Size);
                 new_field->len = field->Size;
                 memcpy(new_field->value,((uint8_t*)pktin->data + field->Position),field->Size);
 
-				printf("\n\nField %s value: ",field->LongName);
 
-				for(i=0;i<field->Size;i++)
-                        	{
-                                	printf("%02hx",new_field->value[i]);
-                        	}
-
-				printf("\n");
 				
 				packet_fields_t *iter;
 				bool done=0;
 				HMAP_FOR_EACH(iter,packet_fields_t, hmap_node,pktout)
 				{
-					//printf("\nHeader: %d",iter->header);
 					if(iter->header == pktout_field->header)
 					{
-						printf("\n Adding entry to existing Hash Map");
 						list_t_push_back(&iter->fields,&new_field->list_node);
 						done=1;
 						break;
@@ -159,7 +147,6 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 				if (!done)
 				{
 					list_t_init(&pktout_field->fields);
-					printf("\nNew Hash Map");
                     list_t_push_back(&pktout_field->fields,&new_field->list_node);
                     hmap_insert(pktout, &pktout_field->hmap_node,hash_int(pktout_field->header, 0));
 				}
@@ -169,28 +156,23 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 
 			if(field->NextField == NULL && field->ParentField == NULL)
 			{
-				printf("\nbreaking");
 				break;
 			}
 			else if (field->NextField == NULL && field->ParentField != NULL)
 			{
 				field = field->ParentField;
-				printf("\nParent");
 			}
 			else if (!field->NextField->isField)
 			{
-				printf("\nblock : %s",*field->NextField);
 				field = field->NextField->FirstChild;
 			}
 			else
 			{
-				printf("\n next field: %s ",*field->NextField);
 				field = field->NextField;
 			}
 
 		}
 
-		printf("\n");
 		if (proto->NextProto == NULL)
 		{
 			break;
@@ -202,9 +184,4 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
     return 1;
 }
 
-int main (int *argc, char **argv){
 
-
-
-
-}

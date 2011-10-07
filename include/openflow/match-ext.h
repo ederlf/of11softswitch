@@ -380,7 +380,7 @@ struct ofp_ext_header{
 OFP_ASSERT(sizeof(struct ofp_ext_header) == 16);
 
 
-/* Values for the 'subtype' member of struct nicira_header. */
+/* Values for the 'subtype' member of struct ext_header. */
 enum ofp_ext_type {
 
     /* Flexible flow specification (aka NXM = Nicira Extended Match). */

@@ -38,8 +38,8 @@ packet_handle_ext_validate(struct packet_handle_ext *handle) {
 
     new_field->len = sizeof(uint32_t);
     new_field->value = (uint8_t*) malloc(sizeof(uint32_t));
+    memset(new_field->value,0x0,sizeof(uint32_t));
     memcpy(new_field->value,&handle->pkt->in_port,sizeof(uint32_t));
-
     list_t_init(&pktout_field->fields);
     list_t_push_back(&pktout_field->fields,&new_field->list_node);
     hmap_insert(&handle->fields, &pktout_field->hmap_node,hash_int(pktout_field->header, 0));
@@ -59,9 +59,7 @@ packet_handle_ext_match(struct packet_handle_ext *handle, struct flow_hmap *matc
         return false;
         
     }
-    printf("VALIDEI\n");
     bool teste = packet_match(&match->flow_fields,&handle->fields );
-    printf("TESTE %d\n", teste);
     return teste;
 
 }
