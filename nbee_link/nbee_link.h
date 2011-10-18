@@ -26,22 +26,10 @@ typedef struct pcap_pkthdr {
 	uint32_t len;	/* length this packet (off wire) */
 }pcap_pkthdr_t;
 
-struct ethernetpkt {
-	short ethdst[ETHADDLEN];
-	short ethsrc[ETHADDLEN];
-	short ethtype[ETHTYPELEN];
-};
-
-struct ipv6pkt {
-	short ipv6dst[IPV6ADDLEN];
-	short ipv6src[IPV6ADDLEN];
-
-};
-
 typedef struct field_values {
-       list_t list_node;
-       uint32_t len;
-       uint8_t* value;
+        list_t list_node;
+	uint32_t len;
+        uint8_t* value;
 }field_values_t;
 
 typedef struct packet_fields{

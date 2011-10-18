@@ -32,7 +32,7 @@ extern "C" int nbee_link_initialize()
 	int NetPDLDecoderFlags = nbDECODER_GENERATEPDML_COMPLETE;
 	int ShowNetworkNames = 0;
 
-	char NetPDLFileName[20] = "customnetpdl.xml";
+	char* NetPDLFileName = "customnetpdl.xml";
 
 	pkhdr = new struct pcap_pkthdr;
 
@@ -79,11 +79,7 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 	pkhdr->caplen = pktin->size; //need this information
 	pkhdr->len = pktin->size; //need this information
 
-//	memset(curr_packet, 0x00,sizeof())
 	_nbPDMLPacket * curr_packet;
-
-	if (pktin->size == 0)
-		return 0;
 
 	// Decode packet
 	if (Decoder->DecodePacket(LinkLayerType, PacketCounter, pkhdr, (const unsigned char*) (pktin->data)) == nbFAILURE)
@@ -92,7 +88,6 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 		// Let's break and save what we've done so far
 		return -1;
 	}
-	PacketCounter++;
 
 	PDMLReader->GetCurrentPacket(&curr_packet);
 
@@ -103,41 +98,40 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 
 	while (1)
         {
-
-        field = proto->FirstField;
-        while(1)
-        {
-
+        	field = proto->FirstField;
+              	while(1)
+               	{
 			
-			if((char)field->LongName[0]<58 && (char)field->LongName[0]>47)
-            {
-	            int i,pow;
-                uint32_t type;
-                uint8_t size;
+			if((char)field->LongName[0]<58 && (char)field->LongName[0]>47 && field->isField )
+                        {
+				/* A value between 47 and 58 indicates a field defined for Matching */
+	                        int i,pow;
+                                uint32_t type;
+                                uint8_t size;
 				packet_fields_t * pktout_field;
-		        pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
-				
-                field_values_t *new_field;
-                new_field = (field_values_t *)malloc(sizeof(field_values_t));
+		                pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
 
-                for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
-        	        type = type + (pow*(field->LongName[i]-48));
+
+                                field_values_t *new_field;
+                                new_field = (field_values_t *)malloc(sizeof(field_values_t));
+				new_field->len = (uint32_t) field->Size;
+
+                                for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
+        	                        type = type + (pow*(field->LongName[i]-48));
 		                        
 				size = field->Size;
 
-                pktout_field->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),size); 
-                new_field->value = (uint8_t*) malloc(field->Size);
-                new_field->len = field->Size;
-                memcpy(new_field->value,((uint8_t*)pktin->data + field->Position),field->Size);
+                                pktout_field->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),size); 
+                                new_field->value = (uint8_t*) malloc(field->Size);
+                                memcpy(new_field->value,((uint8_t*)pktin->data + field->Position),field->Size);
 
-
-				
 				packet_fields_t *iter;
 				bool done=0;
 				HMAP_FOR_EACH(iter,packet_fields_t, hmap_node,pktout)
 				{
 					if(iter->header == pktout_field->header)
 					{
+						/* Adding entry to existing hash entry */
 						list_t_push_back(&iter->fields,&new_field->list_node);
 						done=1;
 						break;
@@ -146,16 +140,19 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 
 				if (!done)
 				{
+					/* Creating new hash map entry */
 					list_t_init(&pktout_field->fields);
-                    list_t_push_back(&pktout_field->fields,&new_field->list_node);
-                    hmap_insert(pktout, &pktout_field->hmap_node,hash_int(pktout_field->header, 0));
+                                	list_t_push_back(&pktout_field->fields,&new_field->list_node);
+                                	hmap_insert(pktout, &pktout_field->hmap_node,
+	                        	hash_int(pktout_field->header, 0));
 				}
 				done =0;
 
 			}
 
-			if(field->NextField == NULL && field->ParentField == NULL)
+			if(field->NextField == NULL && field->ParentField == NULL) 
 			{
+				/* Protocol Done */
 				break;
 			}
 			else if (field->NextField == NULL && field->ParentField != NULL)
@@ -164,6 +161,70 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 			}
 			else if (!field->NextField->isField)
 			{
+
+				if ((char)field->NextField->LongName[0]<58 && (char)field->NextField->LongName[0]>47)
+				{
+		                        int i,pow;
+	                                uint32_t type;
+					packet_fields_t * pktout_field;
+			                pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
+
+		                        field_values_t *new_field;
+                	                new_field = (field_values_t *)malloc(sizeof(field_values_t));
+
+					for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
+        	                        	type = type + (pow*(field->NextField->LongName[i]-48));
+								
+				        new_field->value = (uint8_t*) malloc(field->Size);
+					_nbPDMLField * nbPrevField; 
+				
+					if( !field->isField)
+						nbPrevField = field->FirstChild;
+					else
+						nbPrevField = proto->FirstField;
+
+					string NextHeader ("nexthdr");
+					bool found = true;
+					while(NextHeader.compare(nbPrevField->Name))
+					{
+						if(nbPrevField->NextField != NULL)
+							nbPrevField=nbPrevField->NextField;
+						else
+						{
+							found = false ;
+							break;
+						}
+					}
+
+					if (found)
+					{
+                        pktout_field->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),nbPrevField->Size);
+	                    memcpy(new_field->value,((uint8_t*)pktin->data + nbPrevField->Position),nbPrevField->Size);	
+						new_field->len = (uint32_t) nbPrevField->Size;
+
+						packet_fields_t *iter;
+						bool done=0;
+						HMAP_FOR_EACH(iter,packet_fields_t, hmap_node,pktout)
+						{
+							if(iter->header == pktout_field->header)
+							{
+								/* Adding entry to existing hash entry */
+								done=1;
+								break;
+							}
+						}
+	
+						if (!done)
+						{
+							/* Creating new hash map entry */
+							list_t_init(&pktout_field->fields);
+		                                	list_t_push_back(&pktout_field->fields,&new_field->list_node);
+		                                	hmap_insert(pktout, &pktout_field->hmap_node,
+			                        	hash_int(pktout_field->header, 0));
+						}
+					}
+				}
+				/* Next field is a block. */
 				field = field->NextField->FirstChild;
 			}
 			else
@@ -173,15 +234,14 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 
 		}
 
-		if (proto->NextProto == NULL)
+		if (proto->NextProto == NULL) 
 		{
+			/* Packet Done */
 			break;
 		}
 		proto = proto->NextProto;
 	}
 
-	printf("Packet %ld done\n",curr_packet->Number);
-    return 1;
+	return 1;
 }
-
 

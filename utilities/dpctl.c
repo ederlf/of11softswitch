@@ -1506,7 +1506,8 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             }
             continue;
         }
-        if (strncmp(token, MATCH_NW_DST_IPV6 , strlen(MATCH_NW_SRC_IPV6 )) == 0) {
+        /* IPv6 dst address */
+        if (strncmp(token, MATCH_NW_DST_IPV6 , strlen(MATCH_NW_DST_IPV6 )) == 0) {
             if(!flow_format){ 
                    ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
             }
@@ -1521,6 +1522,32 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                     
                     }
                  ext_m->header.length += 36; 
+            }
+            continue;
+        }
+        /*Routing extension header */
+        if (strncmp(token, MATCH_ROUTING_HEADER_IPV6 , strlen(MATCH_ROUTING_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 ext_put_8(&ext_m->match_fields, TLV_EXT_IPV6_RH_ID , 43 /*Routing Next Header Value */, 0xff);
+                 ext_m->header.length += 5;
+
+            }
+            continue;
+        }
+        /*Hop by Hop */
+        if (strncmp(token, MATCH_HBH_HEADER_IPV6 , strlen(MATCH_HBH_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t v = 0;
+                 uint8_t mask = 0xff;
+                 ext_put_8(&ext_m->match_fields, TLV_EXT_IPV6_HBH_ID, v /*Hop by Hop Header Value */, mask);
+                 ext_m->header.length += 5;
+
             }
             continue;
         }
