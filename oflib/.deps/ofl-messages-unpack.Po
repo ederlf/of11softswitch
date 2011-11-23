@@ -39,7 +39,8 @@ oflib/ofl-messages-unpack.o: oflib/ofl-messages-unpack.c \
  /usr/include/bits/posix2_lim.h lib/util.h lib/compiler.h \
  lib/vlog-modules.def oflib/vlog-modules.def oflib-exp/vlog-modules.def \
  secchan/vlog-modules.def udatapath/vlog-modules.def \
- utilities/vlog-modules.def
+ utilities/vlog-modules.def include/openflow/match-ext.h \
+ include/openflow/openflow.h include/openflow/../../lib/flex-array.h
 
 /usr/include/stdlib.h:
 
@@ -202,3 +203,9 @@ secchan/vlog-modules.def:
 udatapath/vlog-modules.def:
 
 utilities/vlog-modules.def:
+
+include/openflow/match-ext.h:
+
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:

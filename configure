@@ -5306,13 +5306,13 @@ rm -rf conftest*
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for initialize_nb_engine convertpkt_test in -lnbee_link" >&5
-$as_echo_n "checking for initialize_nb_engine convertpkt_test in -lnbee_link... " >&6; }
-if test "${ac_cv_lib_nbee_link_initialize_nb_engine_convertpkt_test+set}" = set; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for nbee_link_initialize in -lnbeelink" >&5
+$as_echo_n "checking for nbee_link_initialize in -lnbeelink... " >&6; }
+if test "${ac_cv_lib_nbeelink_nbee_link_initialize+set}" = set; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lnbee_link  $LIBS"
+LIBS="-lnbeelink  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -5322,32 +5322,32 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char initialize_nb_engine convertpkt_test ();
+char nbee_link_initialize ();
 int
 main ()
 {
-return initialize_nb_engine convertpkt_test ();
+return nbee_link_initialize ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_nbee_link_initialize_nb_engine_convertpkt_test=yes
+  ac_cv_lib_nbeelink_nbee_link_initialize=yes
 else
-  ac_cv_lib_nbee_link_initialize_nb_engine_convertpkt_test=no
+  ac_cv_lib_nbeelink_nbee_link_initialize=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nbee_link_initialize_nb_engine_convertpkt_test" >&5
-$as_echo "$ac_cv_lib_nbee_link_initialize_nb_engine_convertpkt_test" >&6; }
-if test "x$ac_cv_lib_nbee_link_initialize_nb_engine_convertpkt_test" = x""yes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nbeelink_nbee_link_initialize" >&5
+$as_echo "$ac_cv_lib_nbeelink_nbee_link_initialize" >&6; }
+if test "x$ac_cv_lib_nbeelink_nbee_link_initialize" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBNBEE_LINK 1
+#define HAVE_LIBNBEELINK 1
 _ACEOF
 
-  LIBS="-lnbee_link $LIBS"
+  LIBS="-lnbeelink $LIBS"
 
 fi
 

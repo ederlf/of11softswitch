@@ -66,6 +66,7 @@ ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
         dst_match->header.length = htons(m->header.length);
         memset(dst_match->pad, 0x00, 4); 
         memcpy(&dst_match->match_fields , &m->match_fields, sizeof(m->match_fields) + m->match_fields.size);
+       
 
      } else {
         OFL_LOG_WARN(LOG_MODULE, "Experimenter match is not NXFF_NXM");
@@ -78,10 +79,8 @@ ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
 ofl_err
 ofl_exp_match_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match_header **dst){
 
-    
-    struct ofl_ext_match *m = malloc(*len);    
+    struct ofl_ext_match *m; 
     struct ext_match *src_match = (struct ext_match*) src;
-    
     if (*len < ntohs(src->length)) {
         OFL_LOG_WARN(LOG_MODULE, "Received match has invalid length (set to %u, but only %zu received).", 
 ntohs(src->length), *len);
@@ -92,9 +91,7 @@ ntohs(src->length), *len);
     m->header.type = ntohs(src_match->header.type);
     m->header.length = ntohs(src_match->header.length);
     memcpy(&m->match_fields , &src_match->match_fields, sizeof(src_match->match_fields) + src_match->match_fields.size);
-    //nx_ntoh(src_match, m,src_match->match_fields.size);
     *len -=  m->header.length;
-
     *dst = &m->header;
     return 0;
 }

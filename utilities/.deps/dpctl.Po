@@ -37,20 +37,26 @@ utilities/dpctl.o: utilities/dpctl.c config.h /usr/include/arpa/inet.h \
  /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
  /usr/include/bits/confname.h /usr/include/bits/unistd.h \
  /usr/include/sys/time.h utilities/dpctl.h include/openflow/openflow.h \
- lib/nx-match.h lib/ofpbuf.h include/openflow/match-ext.h \
- lib/flex-array.h oflib-exp/ofl-exp-match.h /usr/include/stdio.h \
+ lib/nx-match.h lib/ofpbuf.h lib/hmap.h lib/util.h /usr/include/stdio.h \
  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
- /usr/include/bits/stdio.h /usr/include/bits/stdio2.h oflib/ofl-structs.h \
- oflib/ofl.h oflib/ofl-actions.h oflib/ofl.h lib/flex-array.h \
- oflib/ofl-messages.h oflib/ofl-structs.h oflib/ofl-actions.h \
- oflib/ofl-print.h oflib/ofl-print.h oflib-exp/ofl-exp.h \
- oflib-exp/../oflib/ofl-messages.h oflib-exp/ofl-exp-openflow.h \
- oflib-exp/../oflib/ofl-structs.h oflib-exp/ofl-exp-ext-messages.h \
- lib/command-line.h lib/compiler.h lib/dpif.h \
- include/openflow/nicira-ext.h include/openflow/openflow-ext.h \
- lib/ofpbuf.h lib/packets.h lib/compiler.h lib/random.h lib/util.h \
- lib/random.h lib/socket-util.h lib/timeval.h lib/type-props.h \
+ /usr/include/bits/stdio.h /usr/include/bits/stdio2.h lib/compiler.h \
+ include/openflow/match-ext.h include/openflow/openflow.h \
+ include/openflow/../../lib/flex-array.h oflib-exp/ofl-exp-match.h \
+ oflib/ofl-structs.h oflib/ofl.h oflib/ofl-actions.h oflib/ofl.h \
+ lib/flex-array.h oflib/ofl-messages.h oflib/ofl-structs.h \
+ oflib/ofl-actions.h oflib/ofl-print.h oflib/ofl-print.h \
+ oflib-exp/ofl-exp.h oflib-exp/../oflib/ofl-messages.h \
+ oflib-exp/ofl-exp-openflow.h oflib-exp/../oflib/ofl-structs.h \
+ oflib-exp/ofl-exp-ext-messages.h lib/command-line.h lib/compiler.h \
+ lib/dpif.h include/openflow/nicira-ext.h include/openflow/openflow-ext.h \
+ lib/ofpbuf.h lib/packets.h lib/random.h lib/ipv6_util.h \
+ /usr/include/fcntl.h /usr/include/bits/fcntl.h /usr/include/bits/stat.h \
+ /usr/include/bits/fcntl2.h /usr/include/netdb.h /usr/include/rpc/netdb.h \
+ /usr/include/bits/netdb.h /usr/include/sys/resource.h \
+ /usr/include/bits/resource.h /usr/include/sys/stat.h \
+ /usr/include/sys/un.h lib/random.h lib/socket-util.h lib/timeval.h \
+ lib/type-props.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/limits.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/syslimits.h \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
@@ -212,11 +218,9 @@ lib/nx-match.h:
 
 lib/ofpbuf.h:
 
-include/openflow/match-ext.h:
+lib/hmap.h:
 
-lib/flex-array.h:
-
-oflib-exp/ofl-exp-match.h:
+lib/util.h:
 
 /usr/include/stdio.h:
 
@@ -233,6 +237,16 @@ oflib-exp/ofl-exp-match.h:
 /usr/include/bits/stdio.h:
 
 /usr/include/bits/stdio2.h:
+
+lib/compiler.h:
+
+include/openflow/match-ext.h:
+
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
+
+oflib-exp/ofl-exp-match.h:
 
 oflib/ofl-structs.h:
 
@@ -278,11 +292,31 @@ lib/ofpbuf.h:
 
 lib/packets.h:
 
-lib/compiler.h:
-
 lib/random.h:
 
-lib/util.h:
+lib/ipv6_util.h:
+
+/usr/include/fcntl.h:
+
+/usr/include/bits/fcntl.h:
+
+/usr/include/bits/stat.h:
+
+/usr/include/bits/fcntl2.h:
+
+/usr/include/netdb.h:
+
+/usr/include/rpc/netdb.h:
+
+/usr/include/bits/netdb.h:
+
+/usr/include/sys/resource.h:
+
+/usr/include/bits/resource.h:
+
+/usr/include/sys/stat.h:
+
+/usr/include/sys/un.h:
 
 lib/random.h:
 

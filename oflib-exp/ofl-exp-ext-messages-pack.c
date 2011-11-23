@@ -94,7 +94,9 @@ ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *bu
 
     
         struct ofl_ext_msg_header *exp = (struct ofl_ext_msg_header *)msg;
-        int error;
+        struct ofp_ext_header *oh; 
+        
+        int error = 0;
         switch (exp->type) {
             case (EXT_FLOW_MOD):{
                 struct ofl_ext_flow_mod *fm = (struct ofl_ext_flow_mod*) exp;
@@ -102,12 +104,12 @@ ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *bu
             }
             case (EXT_FLOW_REMOVED):{
                 //return ofl_msg_ext_pack_flow_removed(exp, buf, buf_len);
-                
+                break;
             }
         
         }
      
-     struct ofp_ext_header *oh;    
+        
      oh = (struct ofp_ext_header *)(*buf);
 
      oh->vendor = htonl(EXTENDED_MATCH_ID);
@@ -141,27 +143,108 @@ ofl_msg_ext_pack_flow_removed(struct ofl_nx_flow_removed *msg, uint8_t **buf, si
 }*/
 
 
+
 int
 ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len){
 
     struct ofp_stats_request *req;
     struct ofp_ext_flow_stats_request *stats;
 
-    *buf_len = sizeof(struct ofp_stats_request) + sizeof(struct ofp_flow_stats_request);
+    *buf_len = sizeof(struct ofp_stats_request) + (sizeof(struct ofp_ext_flow_stats_request) - sizeof(struct ext_match)) + (msg->match->length);
     *buf     = (uint8_t *)malloc(*buf_len);
-
     req = (struct ofp_stats_request *)(*buf);
     stats = (struct ofp_ext_flow_stats_request *)req->body;
     stats->table_id    =        msg->table_id;
+    memset(stats->pad,0x00,7);
     stats->out_port    = htonl( msg->out_port);
     stats->out_group   = htonl( msg->out_group);
     stats->cookie      = hton64(msg->cookie);
     stats->cookie_mask = hton64(msg->cookie_mask);
+    ofl_exp_match_pack(msg->match, &stats->match.header);
 
-    ofl_exp_match_pack(msg->match, &(stats->match.header));
-
+        
     return 0;
-
 
 }
 
+
+
+
+static size_t
+ofl_ext_flow_stats_pack(struct ofl_flow_stats *src, uint8_t **dst){
+
+        struct ofp_ext_flow_stats *stats;
+        size_t total_len, len;
+        //uint8_t *data;
+        uint8_t *ptr,data;
+        size_t i;
+ 
+        total_len = (sizeof(struct ofp_ext_flow_stats) - 4) + src->match->length + 
+                    ofl_structs_instructions_ofp_total_len(src->instructions, src->instructions_num, NULL);
+ 
+        stats = (struct ofp_ext_flow_stats *) *dst;
+        stats->length = htons(total_len);
+        stats->table_id = src->table_id;
+        stats->pad = 0x00;
+        stats->duration_sec = htonl(src->duration_sec);
+        stats->duration_nsec = htonl(src->duration_nsec);
+        stats->priority = htons(src->priority);
+        stats->idle_timeout = htons(src->idle_timeout);
+        stats->hard_timeout = htons(src->hard_timeout);
+        memset(stats->pad2, 0x00, 6);
+        stats->cookie = hton64(src->cookie);
+        stats->packet_count = hton64(src->packet_count);
+        stats->byte_count = hton64(src->byte_count);
+
+        ptr = *dst + (sizeof(struct ofp_ext_flow_stats) - 4) ;
+        stats->match =  malloc(src->match->length);
+        
+        ofl_exp_match_pack(src->match, &(stats->match->header));   
+        memcpy(ptr, &stats->match->header, src->match->length); 
+        ptr += src->match->length; 
+        
+        //ptr = (uint8_t *)stats->instructions;
+        
+        for (i=0; i<src->instructions_num; i++) {
+            ptr += ofl_structs_instructions_pack(src->instructions[i], (struct ofp_instruction *)ptr, NULL);
+            //data += len;
+        }
+       
+        return total_len;
+}
+
+static size_t
+ofl_ext_flow_stats_ofp_len(struct ofl_flow_stats *stats, struct ofl_exp *exp) {
+    return (sizeof(struct ofp_ext_flow_stats) -4) + stats->match->length +
+           ofl_structs_instructions_ofp_total_len(stats->instructions, stats->instructions_num, exp);
+}
+
+static size_t
+ofl_ext_flow_stats_ofp_total_len(struct ofl_flow_stats ** stats, size_t stats_num, struct ofl_exp *exp) {
+    size_t sum;
+    OFL_UTILS_SUM_ARR_FUN2(sum, stats, stats_num,
+            ofl_ext_flow_stats_ofp_len, exp);
+    return sum;
+}
+
+
+size_t
+ofl_ext_pack_stats_reply(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, size_t *buf_len) {
+    
+    struct ofl_msg_stats_reply_experimenter *exp = (struct ofl_msg_stats_reply_experimenter *) msg;  
+    struct ofp_stats_reply *resp;
+    size_t i,len;
+    uint8_t *data;
+ 
+    *buf_len = sizeof(struct ofp_stats_reply) + ofl_ext_flow_stats_ofp_total_len( (struct ofl_flow_stats **) &exp->data, exp->data_length, NULL);
+    *buf     = (uint8_t *)malloc(*buf_len);
+    resp = (struct ofp_stats_reply *)(*buf);
+    data = (uint8_t *)resp->body;
+    len = 0;
+    for(i = 0; i < exp->data_length;i++){
+        len = ofl_ext_flow_stats_pack((struct ofl_flow_stats*) ((uint8_t*) exp->data + len) , &data);
+        data += len;   
+    }  
+  
+    return 0;
+}

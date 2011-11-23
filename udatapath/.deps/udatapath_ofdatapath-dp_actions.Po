@@ -49,6 +49,8 @@ udatapath/udatapath_ofdatapath-dp_actions.o: udatapath/dp_actions.c \
  lib/vlog-modules.def oflib/vlog-modules.def oflib-exp/vlog-modules.def \
  secchan/vlog-modules.def udatapath/vlog-modules.def \
  utilities/vlog-modules.def udatapath/pipeline.h udatapath/flow_table.h \
+ oflib-exp/ofl-exp-ext-messages.h include/openflow/match-ext.h \
+ include/openflow/openflow.h include/openflow/../../lib/flex-array.h \
  lib/util.h
 
 /usr/include/netinet/in.h:
@@ -266,5 +268,13 @@ utilities/vlog-modules.def:
 udatapath/pipeline.h:
 
 udatapath/flow_table.h:
+
+oflib-exp/ofl-exp-ext-messages.h:
+
+include/openflow/match-ext.h:
+
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
 
 lib/util.h:

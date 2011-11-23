@@ -191,6 +191,15 @@ ofputil_flow_format_from_string(const char *s);
 const char *
 ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format);
 
+static struct ofl_exp_stats dpctl_exp_stats = 
+        {.req_pack      = ofl_exp_req_pack,
+         .req_unpack    = ofl_exp_req_unpack,
+         .req_free      = ofl_exp_req_free,
+         .req_to_string = ofl_req_to_string,
+         .reply_pack    = ofl_exp_reply_pack,
+         .reply_unpack  = ofl_exp_reply_unpack,
+         .reply_free    = ext_free_stats_reply,
+         .reply_to_string     = ext_reply_to_string };
 
 static struct ofl_exp_msg dpctl_exp_msg =
         {.pack      = ofl_exp_msg_pack,
@@ -209,7 +218,7 @@ static struct ofl_exp dpctl_exp =
         {.act   = NULL,
          .inst  = NULL,
          .match = &dpctl_exp_match,
-         .stats = NULL,
+         .stats = &dpctl_exp_stats,
          .msg   = &dpctl_exp_msg};
 
 static void
@@ -221,9 +230,11 @@ dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
     int error;
      
     error = ofl_msg_pack(req, XID, &bufreq, &bufreq_size, &dpctl_exp);
+   
     if (error) {
         ofp_fatal(0, "Error packing request.");
     }
+
 
     ofpbufreq = ofpbuf_new(0);
     ofpbuf_use(ofpbufreq, bufreq, bufreq_size);
@@ -232,7 +243,6 @@ dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
     if (error) {
         ofp_fatal(0, "Error during transaction.");
     }
-    
     error = ofl_msg_unpack(ofpbufrepl->data, ofpbufrepl->size, repl, NULL /*xid_ptr*/, &dpctl_exp);
 
     if (error) {
@@ -482,6 +492,7 @@ stats_flow(struct vconn *vconn, int argc, char *argv[]) {
         } else {
             make_all_match(&(request.match));
         }
+            
             dpctl_transact_and_print(vconn, (struct ofl_msg_header *)&request, NULL);
     }
 

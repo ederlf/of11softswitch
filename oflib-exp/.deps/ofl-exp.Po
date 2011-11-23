@@ -32,9 +32,9 @@ oflib-exp/ofl-exp.o: oflib-exp/ofl-exp.c /usr/include/inttypes.h \
  oflib-exp/../oflib/ofl-structs.h oflib-exp/../oflib/ofl-actions.h \
  oflib-exp/ofl-exp-nicira.h oflib-exp/../oflib/ofl-structs.h \
  oflib-exp/ofl-exp-openflow.h oflib-exp/ofl-exp-ext-messages.h \
- include/openflow/match-ext.h lib/flex-array.h \
- oflib-exp/../oflib/ofl-log.h oflib-exp/../oflib/ofl-log-vlog.h \
- lib/vlog.h \
+ include/openflow/match-ext.h include/openflow/openflow.h \
+ include/openflow/../../lib/flex-array.h oflib-exp/../oflib/ofl-log.h \
+ oflib-exp/../oflib/ofl-log-vlog.h lib/vlog.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/limits.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/syslimits.h \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
@@ -171,7 +171,9 @@ oflib-exp/ofl-exp-ext-messages.h:
 
 include/openflow/match-ext.h:
 
-lib/flex-array.h:
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
 
 oflib-exp/../oflib/ofl-log.h:
 

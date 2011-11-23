@@ -62,6 +62,7 @@ ofl_ext_message_unpack(struct ofp_header *oh, size_t *len, struct ofl_msg_experi
            // return ofl_ext_unpack_flow_removed(oh, len, msg);
         
         }
+
    }
    return 0;
 }
@@ -183,37 +184,154 @@ ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_
 }*/
 
 ofl_err
-ofl_msg_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, struct ofl_msg_header **msg) {
+ofl_ext_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, struct ofl_msg_header **msg) {
     
     struct ofp_ext_flow_stats_request *sm;
     struct ofl_ext_flow_stats_request *dm;
     ofl_err error = 0;
-
     // ofp_stats_request length was checked at ofl_msg_unpack_stats_request
 
-    if (*len < (sizeof(struct ofp_ext_flow_stats_request) - sizeof(struct ext_match))) {
+    
+    sm = (struct ofp_ext_flow_stats_request *)os->body;
+    if (*len < ((sizeof(struct ofp_ext_flow_stats_request)) - ntohs(sm->match.header.length))) {
         OFL_LOG_WARN(LOG_MODULE, "Received FLOW stats request has invalid length (%zu).", *len);
         return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_LEN);
     }
-    *len -= (sizeof(struct ofp_flow_stats_request) - sizeof(struct ext_match));
-
-    sm = (struct ofp_ext_flow_stats_request *)os->body;
-    dm = (struct ofl_ext_flow_stats_request *)malloc(sizeof(struct ofl_ext_flow_stats_request));
-
+    
+    *len -= (sizeof(struct ofp_ext_flow_stats_request) - sizeof(struct ext_match)) ;
+    dm = (struct ofl_ext_flow_stats_request *) malloc(sizeof(struct ofl_ext_flow_stats_request));
+    
     dm->table_id = sm->table_id;
     dm->out_port = ntohl(sm->out_port);
     dm->out_group = ntohl(sm->out_group);
     dm->cookie = ntoh64(sm->cookie);
     dm->cookie_mask = ntoh64(sm->cookie_mask);
-
+    
     error = ofl_exp_match_unpack(&(sm->match.header), len, &(dm->match));
+    memcpy(&dm->header.experimenter_id,os->pad, sizeof(dm->header.experimenter_id));
     if (error) {
         free(dm);
         return error;
     }
-
     *msg = (struct ofl_msg_header *)dm;
+     
+         
     return 0;
 }
 
+static ofl_err
+ofl_ext_flow_stats_unpack(uint8_t *stats, size_t *len, struct ofl_flow_stats **dst){
+
+    struct ofp_ext_flow_stats *src;
+    struct ofl_flow_stats *s;
+    struct ofp_instruction *inst;
+    ofl_err error;
+    size_t i;
+   
+    src = (struct ofp_ext_flow_stats*) stats;
+    struct ext_match *match = (struct ext_match*) (stats + (sizeof(struct ofp_ext_flow_stats) -4));
+   
+    if (*len < ((sizeof(struct ofp_ext_flow_stats) -4) - ntohs(match->header.length))) {
+        OFL_LOG_WARN(LOG_MODULE, "Received flow stats has invalid length (%zu).", *len);
+        return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
+    }
+
+    if (src->table_id == 0xff) {
+        if (OFL_LOG_IS_WARN_ENABLED(LOG_MODULE)) {
+            char *ts = ofl_table_to_string(src->table_id);
+            OFL_LOG_WARN(LOG_MODULE, "Received flow stats has invalid table_id (%s).", ts);
+            free(ts);
+        }
+        return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
+    }
+    
+   
+    stats += (sizeof(struct ofp_ext_flow_stats) -4 );
+    *len -= (sizeof(struct ofp_ext_flow_stats) -4 );
+
+    s = (struct ofl_flow_stats *)malloc(sizeof(struct ofl_flow_stats));
+
+    s->table_id =             src->table_id;
+    s->duration_sec =  ntohl( src->duration_sec);
+    s->duration_nsec = ntohl( src->duration_nsec);
+    s->priority =      ntohs( src->priority);
+    s->idle_timeout =  ntohs( src->idle_timeout);
+    s->hard_timeout =  ntohs( src->hard_timeout);
+    s->cookie =        ntoh64(src->cookie);
+    s->packet_count =  ntoh64(src->packet_count);
+    s->byte_count =    ntoh64(src->byte_count);
+    s->match = malloc(ntohs(match->header.length));
+    error = ofl_exp_match_unpack(&(match->header), len, &(s->match));
+    if (error) {
+        free(s);
+        return error;
+    }
+   
+    stats +=  ntohs(match->header.length);
+   
+    error = ofl_utils_count_ofp_instructions(stats, *len, &s->instructions_num);
+    if (error) {
+        ofl_exp_match_free(s->match);
+        free(s);
+        return error;
+    }
+    s->instructions = (struct ofl_instruction_header **)malloc(s->instructions_num * sizeof(struct ofl_instruction_header *));
+
+    inst = (struct ofp_instruction *) stats;
+
+    for (i = 0; i < s->instructions_num; i++) {
+        error = ofl_structs_instructions_unpack(inst, len, &(s->instructions[i]), NULL);
+        if (error) {
+            OFL_UTILS_FREE_ARR_FUN2(s->instructions, i,
+                                    ofl_structs_free_instruction, NULL);
+            free(s);
+            return error;
+        }
+        inst = (struct ofp_instruction *)((uint8_t *)inst + ntohs(inst->len));
+    }
+     
+    *dst = s;
+
+    return 0;
+
+}
+
+
+
+ofl_err
+ofl_ext_unpack_stats_reply(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_stats_reply_header **msg) {
+    struct ofp_ext_flow_stats *stat;
+    struct ofl_msg_stats_reply_experimenter *dm;
+    ofl_err error;
+    size_t i,pos;
+
+    // ofp_stats_reply was already checked and subtracted in unpack_stats_reply
+    
+    stat = (struct ofp_ext_flow_stats *)os->body;
+    dm = (struct ofl_msg_stats_reply_experimenter *)malloc(sizeof(struct ofl_msg_stats_reply_experimenter ));
+    error = ofl_utils_count_ofp_ext_flow_stats(stat, *len, &dm->data_length);
+    if (error) {
+        free(dm);
+        return error;
+    }
+    dm->data = (uint8_t*) malloc(dm->data_length * sizeof(struct ofl_ext_flow_stats *));
+    pos = 0;
+    
+    for (i = 0; i < dm->data_length; i++) {
+        size_t len_bf =  *len;
+        error = ofl_ext_flow_stats_unpack((uint8_t*) stat, len, (struct ofl_flow_stats **)((uint8_t *) &(dm->data) + pos) );
+        pos = len_bf - *len;
+        if (error) {
+            OFL_UTILS_FREE_ARR_FUN2((struct ofl_flow_stats *) &dm->data, i,
+                                    ofl_structs_free_flow_stats, NULL);
+            free (dm);
+            return error;
+        }
+        stat = (struct ofp_ext_flow_stats *)((uint8_t *)stat + ntohs(stat->length));
+    }
+
+    *msg = (struct ofl_msg_header *)dm;
+    return 0;  
+   
+}
 

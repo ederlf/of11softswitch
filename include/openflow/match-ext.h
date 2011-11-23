@@ -394,7 +394,9 @@ enum ofp_ext_type {
     /* Flexible flow specification (aka NXM = Nicira Extended Match). */
     EXT_SET_FLOW_FORMAT,        /* Set flow format. */
     EXT_FLOW_MOD,               /* Analogous to OFPT_FLOW_MOD. */
-    EXT_FLOW_REMOVED            /* Analogous to OFPT_FLOW_REMOVED. */
+    EXT_FLOW_REMOVED,            /* Analogous to OFPT_FLOW_REMOVED. */
+    
+    OFPST_EXT_FLOW
 };
 
 struct ext_match
@@ -457,6 +459,7 @@ struct ofp_ext_flow_mod {
     struct ofp_instruction instructions[0]; /* Instruction set. */
 };
 
+
 /* NXT_FLOW_REMOVED (analogous to OFPT_FLOW_REMOVED). */
 struct ofp_ext_flow_removed {
     struct ofp_ext_header header;
@@ -468,7 +471,7 @@ struct ofp_ext_flow_removed {
     uint32_t duration_nsec;   /* Time flow was alive in nanoseconds beyond
                                  duration_sec. */
     uint16_t idle_timeout;    /* Idle timeout from original flow mod. */
-    uint8_t pad[2];          /* Align to 64-bits. */
+    uint8_t pad[2];           /* Align to 64-bits. */
     uint64_t packet_count;
     uint64_t byte_count;
     struct ext_match match;
@@ -480,8 +483,8 @@ struct ofp_ext_flow_removed {
 struct ofp_ext_flow_stats_request {
     uint8_t table_id;         /* ID of table to read (from ofp_table_stats),
                                  0xff for all tables. */
-    uint8_t pad;               /* Align to 64 bits. */
-    uint16_t out_port;        /* Require matching entries to include this
+    uint8_t pad[7];               /* Align to 64 bits. */
+    uint32_t out_port;        /* Require matching entries to include this
                                  as an output port.  A value of OFPP_NONE
                                  indicates no restriction. */
     uint32_t out_group;       /* Require matching entries to include this
@@ -516,8 +519,8 @@ struct ofp_ext_flow_stats {
     uint64_t byte_count;      /* Number of bytes in flow. */
     struct ext_match *match;   /* Description of fields. */
     struct ofp_instruction instructions[0]; /* Instruction set. */
-   
 };
+OFP_ASSERT(sizeof(struct ofp_ext_flow_stats) == 52);
 
 /* Nicira vendor stats request of type NXST_AGGREGATE (analogous to
  * OFPST_AGGREGATE request). */

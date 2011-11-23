@@ -40,8 +40,8 @@ lib/vconn.o: lib/vconn.c config.h lib/vconn-provider.h \
  lib/poll-loop.h lib/random.h oflib/ofl.h oflib/ofl-messages.h \
  oflib/ofl.h oflib/ofl-structs.h oflib/ofl-actions.h oflib-exp/ofl-exp.h \
  oflib-exp/../oflib/ofl-messages.h oflib-exp/ofl-exp-match.h \
- include/openflow/match-ext.h lib/flex-array.h oflib/ofl-structs.h \
- lib/vlog.h \
+ include/openflow/match-ext.h include/openflow/openflow.h \
+ include/openflow/../../lib/flex-array.h oflib/ofl-structs.h lib/vlog.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/limits.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/syslimits.h \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
@@ -229,7 +229,9 @@ oflib-exp/ofl-exp-match.h:
 
 include/openflow/match-ext.h:
 
-lib/flex-array.h:
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
 
 oflib/ofl-structs.h:
 

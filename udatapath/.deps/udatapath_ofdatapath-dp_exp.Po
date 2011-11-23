@@ -38,7 +38,8 @@ udatapath/udatapath_ofdatapath-dp_exp.o: udatapath/dp_exp.c \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
  /usr/include/bits/posix2_lim.h oflib-exp/ofl-exp-ext-messages.h \
- include/openflow/match-ext.h lib/flex-array.h oflib-exp/ofl-exp-match.h \
+ include/openflow/match-ext.h include/openflow/openflow.h \
+ include/openflow/../../lib/flex-array.h oflib-exp/ofl-exp-match.h \
  include/openflow/openflow-ext.h lib/vlog.h lib/vlog-modules.def \
  oflib/vlog-modules.def oflib-exp/vlog-modules.def \
  secchan/vlog-modules.def udatapath/vlog-modules.def \
@@ -214,7 +215,9 @@ oflib-exp/ofl-exp-ext-messages.h:
 
 include/openflow/match-ext.h:
 
-lib/flex-array.h:
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
 
 oflib-exp/ofl-exp-match.h:
 

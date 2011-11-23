@@ -37,7 +37,12 @@ udatapath/udatapath_ofdatapath-flow_entry.o: udatapath/flow_entry.c \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
  /usr/include/bits/posix2_lim.h udatapath/dp_actions.h \
- udatapath/flow_table.h udatapath/pipeline.h udatapath/flow_entry.h \
+ udatapath/flow_table.h udatapath/pipeline.h \
+ oflib-exp/ofl-exp-ext-messages.h include/openflow/match-ext.h \
+ include/openflow/openflow.h include/openflow/../../lib/flex-array.h \
+ udatapath/flow_entry.h udatapath/flow_hmap.h \
+ udatapath/../oflib/ofl-structs.h udatapath/../lib/hmap.h \
+ udatapath/../oflib-exp/ofl-exp-match.h oflib-exp/ofl-exp-match.h \
  oflib/ofl-utils.h /usr/include/netinet/in.h /usr/include/sys/socket.h \
  /usr/include/sys/uio.h /usr/include/bits/uio.h \
  /usr/include/bits/socket.h /usr/include/bits/sockaddr.h \
@@ -45,8 +50,9 @@ udatapath/udatapath_ofdatapath-flow_entry.o: udatapath/flow_entry.c \
  /usr/include/asm-generic/socket.h \
  /usr/include/i386-linux-gnu/asm/sockios.h \
  /usr/include/asm-generic/sockios.h /usr/include/bits/socket2.h \
- /usr/include/bits/in.h lib/util.h udatapath/match_std.h lib/vlog.h \
- lib/vlog-modules.def oflib/vlog-modules.def oflib-exp/vlog-modules.def \
+ /usr/include/bits/in.h lib/bj_hash.h lib/util.h udatapath/match_std.h \
+ lib/nx-match.h lib/ofpbuf.h lib/hmap.h lib/vlog.h lib/vlog-modules.def \
+ oflib/vlog-modules.def oflib-exp/vlog-modules.def \
  secchan/vlog-modules.def udatapath/vlog-modules.def \
  utilities/vlog-modules.def
 
@@ -222,7 +228,25 @@ udatapath/flow_table.h:
 
 udatapath/pipeline.h:
 
+oflib-exp/ofl-exp-ext-messages.h:
+
+include/openflow/match-ext.h:
+
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
+
 udatapath/flow_entry.h:
+
+udatapath/flow_hmap.h:
+
+udatapath/../oflib/ofl-structs.h:
+
+udatapath/../lib/hmap.h:
+
+udatapath/../oflib-exp/ofl-exp-match.h:
+
+oflib-exp/ofl-exp-match.h:
 
 oflib/ofl-utils.h:
 
@@ -250,9 +274,17 @@ oflib/ofl-utils.h:
 
 /usr/include/bits/in.h:
 
+lib/bj_hash.h:
+
 lib/util.h:
 
 udatapath/match_std.h:
+
+lib/nx-match.h:
+
+lib/ofpbuf.h:
+
+lib/hmap.h:
 
 lib/vlog.h:
 

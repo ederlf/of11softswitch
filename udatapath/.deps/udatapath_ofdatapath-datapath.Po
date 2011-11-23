@@ -47,17 +47,18 @@ udatapath/udatapath_ofdatapath-datapath.o: udatapath/datapath.c \
  /usr/include/getopt.h /usr/include/bits/unistd.h lib/csum.h \
  udatapath/dp_control.h lib/flow.h lib/hash.h lib/ofp.h lib/flow.h \
  lib/ofpbuf.h oflib-exp/ofl-exp.h oflib-exp/ofl-exp-match.h \
- include/openflow/match-ext.h lib/flex-array.h oflib/ofl-log.h \
+ include/openflow/match-ext.h include/openflow/openflow.h \
+ include/openflow/../../lib/flex-array.h oflib/ofl-log.h \
  oflib/ofl-log-vlog.h lib/vlog.h lib/vlog-modules.def \
  oflib/vlog-modules.def oflib-exp/vlog-modules.def \
  secchan/vlog-modules.def udatapath/vlog-modules.def \
  utilities/vlog-modules.def include/openflow/private-ext.h \
  include/openflow/openflow-ext.h udatapath/pipeline.h \
- udatapath/flow_table.h lib/poll-loop.h /usr/include/poll.h \
- /usr/include/sys/poll.h /usr/include/bits/poll.h lib/rconn.h lib/queue.h \
- lib/stp.h lib/vconn.h lib/xtoxll.h /usr/include/arpa/inet.h \
- /usr/include/netinet/in.h /usr/include/sys/socket.h \
- /usr/include/sys/uio.h /usr/include/bits/uio.h \
+ udatapath/flow_table.h oflib-exp/ofl-exp-ext-messages.h lib/poll-loop.h \
+ /usr/include/poll.h /usr/include/sys/poll.h /usr/include/bits/poll.h \
+ lib/rconn.h lib/queue.h lib/stp.h lib/vconn.h lib/xtoxll.h \
+ /usr/include/arpa/inet.h /usr/include/netinet/in.h \
+ /usr/include/sys/socket.h /usr/include/sys/uio.h /usr/include/bits/uio.h \
  /usr/include/bits/socket.h /usr/include/bits/sockaddr.h \
  /usr/include/i386-linux-gnu/asm/socket.h \
  /usr/include/asm-generic/socket.h \
@@ -277,7 +278,9 @@ oflib-exp/ofl-exp-match.h:
 
 include/openflow/match-ext.h:
 
-lib/flex-array.h:
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
 
 oflib/ofl-log.h:
 
@@ -304,6 +307,8 @@ include/openflow/openflow-ext.h:
 udatapath/pipeline.h:
 
 udatapath/flow_table.h:
+
+oflib-exp/ofl-exp-ext-messages.h:
 
 lib/poll-loop.h:
 

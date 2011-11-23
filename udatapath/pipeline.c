@@ -344,23 +344,25 @@ pipeline_ext_handle_stats_request_flow(struct pipeline *pl,
     if (msg->table_id == 0xff) {
         size_t i;
         for (i=0; i<PIPELINE_TABLES; i++) {
-            flow_table_stats(pl->tables[i], msg, &stats, &stats_size, &stats_num);
+            ext_flow_table_stats(pl->tables[i], msg, &stats, &stats_size, &stats_num);
         }
     } else {
-        flow_table_stats(pl->tables[msg->table_id], msg, &stats, &stats_size, &stats_num);
+       
+        ext_flow_table_stats(pl->tables[msg->table_id], msg, &stats, &stats_size, &stats_num);
     }
 
     {
-        struct ofl_msg_stats_reply_flow reply =
+       struct ofl_msg_stats_reply_experimenter reply =
                 {{{.type = OFPT_STATS_REPLY},
-                  .type = OFPST_FLOW, .flags = 0x0000},
-                 .stats     = stats,
-                 .stats_num = stats_num
+                  .type = OFPST_EXPERIMENTER, .flags = 0x0000},
+                 .experimenter_id = EXTENDED_MATCH_ID,
+                 .data_length    = stats_num,
+                 .data = (uint8_t*) *stats
                 };
-
+        struct ofl_flow_stats *src = (struct ofl_flow_stats *) reply.data;
         dp_send_message(pl->dp, (struct ofl_msg_header *)&reply, sender);
     }
-
+    
     free(stats);
     ofl_msg_free((struct ofl_msg_header *)msg, pl->dp->exp);
     return 0;
@@ -394,7 +396,7 @@ pipeline_handle_stats_request_flow(struct pipeline *pl,
                  .stats     = stats,
                  .stats_num = stats_num
                 };
-
+        
         dp_send_message(pl->dp, (struct ofl_msg_header *)&reply, sender);
     }
 

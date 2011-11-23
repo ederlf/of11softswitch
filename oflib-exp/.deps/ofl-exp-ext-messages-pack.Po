@@ -28,7 +28,9 @@ oflib-exp/ofl-exp-ext-messages-pack.o: \
  /usr/include/bits/in.h /usr/include/string.h /usr/include/xlocale.h \
  /usr/include/bits/string.h /usr/include/bits/string2.h \
  /usr/include/bits/string3.h oflib-exp/../include/openflow/match-ext.h \
- include/openflow/openflow.h lib/flex-array.h oflib-exp/ofl-exp-match.h \
+ oflib-exp/../include/openflow/openflow.h \
+ oflib-exp/../include/openflow/../../lib/flex-array.h \
+ oflib-exp/ofl-exp-match.h include/openflow/openflow.h \
  include/openflow/match-ext.h oflib/ofl-structs.h oflib/ofl.h \
  oflib/ofl-actions.h oflib/ofl.h oflib-exp/ofl-exp-ext-messages.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include/stdbool.h \
@@ -157,11 +159,13 @@ oflib-exp/ofl-exp-ext-messages-pack.o: \
 
 oflib-exp/../include/openflow/match-ext.h:
 
-include/openflow/openflow.h:
+oflib-exp/../include/openflow/openflow.h:
 
-lib/flex-array.h:
+oflib-exp/../include/openflow/../../lib/flex-array.h:
 
 oflib-exp/ofl-exp-match.h:
+
+include/openflow/openflow.h:
 
 include/openflow/match-ext.h:
 

@@ -368,21 +368,21 @@ match_ext_nonstrict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
     uint8_t * p2 =  b->match_fields.entries;
     uint32_t header1, header2;  
     uint8_t found;
+    
     if(!b->match_fields.total)
         return true; 
-    
+
     if(a->match_fields.total != b->match_fields.total)
         return false;
     
     for(i = 0; i < a->match_fields.total; i++){
          memcpy(&header1, p1, 4);
          found = 0;
-         unsigned int len1 = NXM_LENGTH(header1); 
+         unsigned int len1 = NXM_LENGTH(header1);
          for(j = 0; j < b->match_fields.total; j++){     
             memcpy(&header2, p2, 4);
             unsigned int len2 = NXM_LENGTH(header2);
             if (header1 == header2){
-                
                 found = 1;
                 p1 +=4;
                 p2 +=4;
@@ -475,6 +475,7 @@ match_ext_nonstrict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
         if (!found)
             return false;
     }
+    
     return true;  
 
 

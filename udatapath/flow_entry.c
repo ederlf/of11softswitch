@@ -341,6 +341,7 @@ ext_flow_entry_create(struct datapath *dp, struct flow_table *table, struct ofl_
     entry->stats->byte_count       = 0;
 
     entry->stats->match            = mod->match;
+    printf("STATS MATCH LEN %d\n", entry->stats->match->length);
     entry->stats->instructions_num = mod->instructions_num;
     entry->stats->instructions     = mod->instructions;
 

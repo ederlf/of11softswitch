@@ -151,3 +151,92 @@ ofl_exp_msg_to_string(struct ofl_msg_experimenter *msg) {
         }
     }
 }
+
+int ofl_exp_reply_pack(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, size_t *buf_len){
+
+     struct ofl_msg_stats_reply_experimenter * m = (struct ofl_msg_stats_reply_experimenter * ) msg;
+     switch (m->experimenter_id) {
+         case (EXTENDED_MATCH_ID):{
+           return ofl_ext_pack_stats_reply( (struct ofl_msg_stats_reply_header *)msg, buf, buf_len); 
+        }
+     
+     }
+    return 1;
+}
+
+ofl_err ofl_exp_reply_unpack(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_stats_reply_header **msg){
+
+    //struct ofp_stats_request *req = (struct ofp_stats_request  *) (os); 
+
+    //printf("Saindo %x\n", req->experimenter);
+    //switch (htonl(req->experimenter)) {
+       //  case (EXTENDED_MATCH_ID):{
+         //   printf("Entrei\n");
+        return ofl_ext_unpack_stats_reply(os, len,  msg); 
+      //  }
+     
+    // }
+    
+}
+
+int ofl_exp_req_pack(struct ofl_msg_stats_request_header *msg, uint8_t **buf, size_t *buf_len){
+
+     struct ofl_msg_stats_request_experimenter * m = (struct ofl_msg_stats_request_experimenter * ) msg;
+     switch (m->experimenter_id) {
+         case (EXTENDED_MATCH_ID):{
+           return ofl_ext_pack_stats_request_flow((struct ofl_ext_flow_stats_request*)msg, buf, buf_len); 
+        }
+     
+     }
+    return 1;
+}
+
+ofl_err ofl_exp_req_unpack(struct ofp_stats_request *os, size_t *len, struct ofl_msg_stats_request_header **msg){
+
+    //struct ofp_stats_request *req = (struct ofp_stats_request  *) (os); 
+
+    //printf("Saindo %x\n", req->experimenter);
+    //switch (htonl(req->experimenter)) {
+       //  case (EXTENDED_MATCH_ID):{
+         //   printf("Entrei\n");
+    return ofl_ext_unpack_stats_request_flow(os, len, (struct ofl_msg_header**) msg); 
+      //  }
+     
+    // }
+    
+}
+
+int ofl_exp_req_free(struct ofl_msg_stats_request_header *msg){
+
+}
+
+char* ofl_req_to_string(struct ofl_msg_stats_request_header *msg){
+
+    char *str;
+    size_t str_size;
+    FILE *stream = open_memstream(&str, &str_size);
+    fprintf(stream, "type = flow");
+    fclose(stream);
+    return str;
+
+}
+
+
+char * ext_reply_to_string (struct ofl_msg_stats_reply_header *msg)
+{
+    char *str;
+    size_t str_size;
+    FILE *stream = open_memstream(&str, &str_size);
+    struct ofl_msg_stats_reply_experimenter *exp = ( struct ofl_msg_stats_reply_experimenter *) msg;
+    ofl_ext_msg_print_stats_reply_flow(exp, stream);
+    fclose(stream);
+    return str;
+
+}  
+
+int ext_free_stats_reply (struct ofl_msg_stats_reply_header *msg){
+ 
+    ofl_ext_stats_reply_free(msg);
+    return 0;
+ 
+}

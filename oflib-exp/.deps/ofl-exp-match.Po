@@ -29,8 +29,9 @@ oflib-exp/ofl-exp-match.o: oflib-exp/ofl-exp-match.c /usr/include/stdio.h \
  /usr/include/bits/in.h oflib-exp/../lib/byte-order.h \
  /usr/include/arpa/inet.h /usr/include/inttypes.h \
  oflib-exp/ofl-exp-match.h include/openflow/openflow.h \
- include/openflow/match-ext.h lib/flex-array.h oflib/ofl-structs.h \
- oflib/ofl.h oflib/ofl-actions.h oflib/ofl.h oflib-exp/../oflib/ofl-log.h \
+ include/openflow/match-ext.h include/openflow/openflow.h \
+ include/openflow/../../lib/flex-array.h oflib/ofl-structs.h oflib/ofl.h \
+ oflib/ofl-actions.h oflib/ofl.h oflib-exp/../oflib/ofl-log.h \
  oflib-exp/../oflib/ofl-log-vlog.h lib/vlog.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/limits.h \
  /usr/lib/i386-linux-gnu/gcc/i686-linux-gnu/4.5.2/include-fixed/syslimits.h \
@@ -42,7 +43,7 @@ oflib-exp/ofl-exp-match.o: oflib-exp/ofl-exp-match.c /usr/include/stdio.h \
  oflib-exp/vlog-modules.def secchan/vlog-modules.def \
  udatapath/vlog-modules.def utilities/vlog-modules.def \
  oflib-exp/../oflib/ofl-print.h oflib-exp/../oflib/ofl.h \
- oflib-exp/../oflib/ofl-print.h lib/nx-match.h lib/ofpbuf.h \
+ oflib-exp/../oflib/ofl-print.h lib/nx-match.h lib/ofpbuf.h lib/hmap.h \
  oflib-exp/ofl-exp-match.h
 
 /usr/include/stdio.h:
@@ -165,7 +166,9 @@ include/openflow/openflow.h:
 
 include/openflow/match-ext.h:
 
-lib/flex-array.h:
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
 
 oflib/ofl-structs.h:
 
@@ -222,5 +225,7 @@ oflib-exp/../oflib/ofl-print.h:
 lib/nx-match.h:
 
 lib/ofpbuf.h:
+
+lib/hmap.h:
 
 oflib-exp/ofl-exp-match.h:

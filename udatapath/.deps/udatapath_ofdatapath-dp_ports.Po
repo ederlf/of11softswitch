@@ -49,8 +49,11 @@ udatapath/udatapath_ofdatapath-dp_ports.o: udatapath/dp_ports.c \
  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
  /usr/include/bits/posix2_lim.h oflib/ofl-actions.h lib/packets.h \
  lib/random.h udatapath/packet_handle_std.h udatapath/pipeline.h \
- udatapath/flow_table.h oflib/ofl-log.h oflib/ofl-log-vlog.h lib/vlog.h \
- lib/vlog-modules.def oflib/vlog-modules.def oflib-exp/vlog-modules.def \
+ udatapath/flow_table.h oflib-exp/ofl-exp-ext-messages.h \
+ include/openflow/match-ext.h include/openflow/openflow.h \
+ include/openflow/../../lib/flex-array.h oflib/ofl-log.h \
+ oflib/ofl-log-vlog.h lib/vlog.h lib/vlog-modules.def \
+ oflib/vlog-modules.def oflib-exp/vlog-modules.def \
  secchan/vlog-modules.def udatapath/vlog-modules.def \
  utilities/vlog-modules.def lib/util.h
 
@@ -263,6 +266,14 @@ udatapath/packet_handle_std.h:
 udatapath/pipeline.h:
 
 udatapath/flow_table.h:
+
+oflib-exp/ofl-exp-ext-messages.h:
+
+include/openflow/match-ext.h:
+
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
 
 oflib/ofl-log.h:
 

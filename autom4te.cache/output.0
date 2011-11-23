@@ -5306,6 +5306,52 @@ rm -rf conftest*
 fi
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for nbee_link_initialize in -lnbeelink" >&5
+$as_echo_n "checking for nbee_link_initialize in -lnbeelink... " >&6; }
+if test "${ac_cv_lib_nbeelink_nbee_link_initialize+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lnbeelink  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char nbee_link_initialize ();
+int
+main ()
+{
+return nbee_link_initialize ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_nbeelink_nbee_link_initialize=yes
+else
+  ac_cv_lib_nbeelink_nbee_link_initialize=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nbeelink_nbee_link_initialize" >&5
+$as_echo "$ac_cv_lib_nbeelink_nbee_link_initialize" >&6; }
+if test "x$ac_cv_lib_nbeelink_nbee_link_initialize" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+@%:@define HAVE_LIBNBEELINK 1
+_ACEOF
+
+  LIBS="-lnbeelink $LIBS"
+
+fi
+
+
 for ac_func in strsignal
 do :
   ac_fn_c_check_func "$LINENO" "strsignal" "ac_cv_func_strsignal"
@@ -5896,6 +5942,8 @@ $as_echo "$ofp_cv__Wno_override_init" >&6; }
 
 
 ac_config_files="$ac_config_files Makefile"
+
+
 
 
 #AC_CONFIG_FILES([Makefile

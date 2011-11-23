@@ -39,10 +39,16 @@ udatapath/udatapath_ofdatapath-pipeline.o: udatapath/pipeline.c \
  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
  /usr/include/bits/posix2_lim.h oflib/ofl-actions.h lib/compiler.h \
  udatapath/dp_actions.h udatapath/pipeline.h udatapath/flow_table.h \
+ oflib-exp/ofl-exp-ext-messages.h include/openflow/match-ext.h \
+ include/openflow/openflow.h include/openflow/../../lib/flex-array.h \
  udatapath/flow_entry.h lib/util.h lib/vlog.h lib/vlog-modules.def \
  oflib/vlog-modules.def oflib-exp/vlog-modules.def \
  secchan/vlog-modules.def udatapath/vlog-modules.def \
- utilities/vlog-modules.def
+ utilities/vlog-modules.def udatapath/../nbee_link/nbee_link.h \
+ udatapath/../nbee_link/../lib/list_t.h \
+ udatapath/../nbee_link/../lib/util.h \
+ udatapath/../nbee_link/../lib/hmap.h \
+ udatapath/../nbee_link/../lib/ofpbuf.h
 
 /usr/include/sys/types.h:
 
@@ -218,6 +224,14 @@ udatapath/pipeline.h:
 
 udatapath/flow_table.h:
 
+oflib-exp/ofl-exp-ext-messages.h:
+
+include/openflow/match-ext.h:
+
+include/openflow/openflow.h:
+
+include/openflow/../../lib/flex-array.h:
+
 udatapath/flow_entry.h:
 
 lib/util.h:
@@ -235,3 +249,13 @@ secchan/vlog-modules.def:
 udatapath/vlog-modules.def:
 
 utilities/vlog-modules.def:
+
+udatapath/../nbee_link/nbee_link.h:
+
+udatapath/../nbee_link/../lib/list_t.h:
+
+udatapath/../nbee_link/../lib/util.h:
+
+udatapath/../nbee_link/../lib/hmap.h:
+
+udatapath/../nbee_link/../lib/ofpbuf.h:
