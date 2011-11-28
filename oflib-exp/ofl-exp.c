@@ -91,8 +91,7 @@ ofl_exp_msg_unpack(struct ofp_header *oh, size_t *len, struct ofl_msg_experiment
         case (EXTENDED_MATCH_ID):{ 
             return ofl_ext_message_unpack(oh, len, msg);     
          }
-        default: {
-                       
+        default: {                     
             
             OFL_LOG_WARN(LOG_MODULE, "Trying to unpack unknown EXPERIMENTER message (%u).", htonl(exp->experimenter));
             return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_EXPERIMENTER);

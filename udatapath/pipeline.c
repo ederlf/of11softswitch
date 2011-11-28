@@ -357,7 +357,7 @@ pipeline_ext_handle_stats_request_flow(struct pipeline *pl,
                   .type = OFPST_EXPERIMENTER, .flags = 0x0000},
                  .experimenter_id = EXTENDED_MATCH_ID,
                  .data_length    = stats_num,
-                 .data = (uint8_t*) *stats
+                 .data = (uint8_t*) stats
                 };
         struct ofl_flow_stats *src = (struct ofl_flow_stats *) reply.data;
         dp_send_message(pl->dp, (struct ofl_msg_header *)&reply, sender);

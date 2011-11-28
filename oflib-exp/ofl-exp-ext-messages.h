@@ -84,24 +84,6 @@ struct ofl_ext_flow_mod {
     struct ofl_instruction_header **instructions; /* Instruction set */
 };
 
-/* EXT_FLOW_REMOVED (analogous to OFPT_FLOW_REMOVED). */
-struct ofl_ext_flow_removed {
-    struct ofl_ext_msg_header header;
-    uint64_t cookie;          /* Opaque controller-issued identifier. */
-    uint16_t priority;        /* Priority level of flow entry. */
-    uint8_t reason;           /* One of OFPRR_*. */
-    uint8_t table_id;         /* ID of the table */
-    uint32_t duration_sec;    /* Time flow was alive in seconds. */
-    uint32_t duration_nsec;   /* Time flow was alive in nanoseconds beyond
-                                 duration_sec. */
-    uint16_t idle_timeout;    /* Idle timeout from original flow mod. */
-    uint64_t packet_count;
-    uint64_t byte_count;
-    struct ofl_match_header        *match;        /* Fields to match */
-
-};
-
-
 /* Nicira vendor stats request of type EXT_FLOW (analogous to OFPST_FLOW/ OFPST_AGGREGATE
  * request). */
 struct ofl_ext_flow_stats_request {
@@ -124,7 +106,12 @@ struct ofl_ext_flow_stats_request {
 
 };
 
+struct ofl_ext_msg_flow_removed {
+   struct ofl_ext_msg_header   header; 
 
+   struct ofl_flow_stats         *stats;
+   enum ofp_flow_removed_reason   reason;   /* One of OFPRR_*. */
+};
 
 
 int     
@@ -140,10 +127,10 @@ int
 ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *buf_len);
 
 int
-ofl_ext_free_flow_mod(struct ofl_ext_flow_mod *msg, bool with_match, bool with_instructions, struct ofl_exp *exp);
+ofl_ext_pack_flow_removed(struct ofl_ext_msg_flow_removed *msg, uint8_t **buf, size_t *buf_len);
 
 int
-ofl_msg_ext_pack_flow_removed(struct ofl_ext_flow_removed *msg, uint8_t **buf, size_t *buf_len);
+ofl_ext_free_flow_mod(struct ofl_ext_flow_mod *msg, bool with_match, bool with_instructions, struct ofl_exp *exp);
 
 int
 ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len);

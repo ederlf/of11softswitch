@@ -37,9 +37,9 @@ udatapath/udatapath_ofdatapath-flow_entry.o: udatapath/flow_entry.c \
  /usr/include/limits.h /usr/include/bits/posix1_lim.h \
  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
  /usr/include/bits/posix2_lim.h udatapath/dp_actions.h \
- udatapath/flow_table.h udatapath/pipeline.h \
- oflib-exp/ofl-exp-ext-messages.h include/openflow/match-ext.h \
- include/openflow/openflow.h include/openflow/../../lib/flex-array.h \
+ udatapath/flow_table.h oflib-exp/ofl-exp-ext-messages.h \
+ include/openflow/match-ext.h include/openflow/openflow.h \
+ include/openflow/../../lib/flex-array.h udatapath/pipeline.h \
  udatapath/flow_entry.h udatapath/flow_hmap.h \
  udatapath/../oflib/ofl-structs.h udatapath/../lib/hmap.h \
  udatapath/../oflib-exp/ofl-exp-match.h oflib-exp/ofl-exp-match.h \
@@ -226,8 +226,6 @@ udatapath/dp_actions.h:
 
 udatapath/flow_table.h:
 
-udatapath/pipeline.h:
-
 oflib-exp/ofl-exp-ext-messages.h:
 
 include/openflow/match-ext.h:
@@ -235,6 +233,8 @@ include/openflow/match-ext.h:
 include/openflow/openflow.h:
 
 include/openflow/../../lib/flex-array.h:
+
+udatapath/pipeline.h:
 
 udatapath/flow_entry.h:
 

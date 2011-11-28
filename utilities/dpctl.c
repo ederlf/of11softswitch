@@ -637,7 +637,7 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .buffer_id = 0xffffffff,
              .out_port = OFPP_ANY,
              .out_group = OFPG_ANY,
-             .flags = 0x0000,
+             .flags = OFPFF_SEND_FLOW_REM,
              .match = NULL,
              .instructions_num = 0,
              .instructions = NULL};
@@ -675,7 +675,7 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .buffer_id = 0xffffffff,
              .out_port = OFPP_ANY,
              .out_group = OFPG_ANY,
-             .flags = 0x0000,
+             .flags = OFPFF_SEND_FLOW_REM,
              .match = NULL,
              .instructions_num = 0,
              .instructions = NULL};  

@@ -148,7 +148,6 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                 switch(header){
                     case (TLV_EXT_IN_PORT):{
                         uint32_t *value = p + 4;
-                        /*Check for byte order */
                         fprintf(stream, " port=\"");   
                         ofl_port_print(stream, *value);
                         fprintf(stream, "\"");
@@ -256,4 +255,5 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
             }
         }     
     }
+      
 }

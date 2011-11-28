@@ -47,6 +47,36 @@
 #define LOG_MODULE ofl_exp
 OFL_LOG_INIT(LOG_MODULE)
 
+int     
+ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *buf_len)    
+{
+
+    
+        struct ofl_ext_msg_header *exp = (struct ofl_ext_msg_header *)msg;
+        struct ofp_ext_header *oh; 
+        
+        
+        int error = 0;
+        switch (exp->type) {
+            case (EXT_FLOW_MOD):{
+                struct ofl_ext_flow_mod *fm = (struct ofl_ext_flow_mod*) exp;
+                error = ofl_msg_ext_pack_flow_mod(fm, buf, buf_len);
+                oh = (struct ofp_ext_header *)(*buf); 
+                oh->subtype = htonl(EXT_FLOW_MOD);
+                break;           
+            }
+            case (EXT_FLOW_REMOVED):{
+                error = ofl_ext_pack_flow_removed((struct ofl_ext_msg_flow_removed*) exp, buf, buf_len);
+                oh = (struct ofp_ext_header *)(*buf);
+                oh->subtype = htonl(EXT_FLOW_REMOVED);
+                break;
+            }
+        
+        }    
+    
+     oh->vendor = htonl(EXTENDED_MATCH_ID);   
+     return error;
+} 
 
 int
 ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *buf_len) {
@@ -88,61 +118,6 @@ ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *b
     return 0;
 }
 
-int     
-ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *buf_len)    
-{
-
-    
-        struct ofl_ext_msg_header *exp = (struct ofl_ext_msg_header *)msg;
-        struct ofp_ext_header *oh; 
-        
-        int error = 0;
-        switch (exp->type) {
-            case (EXT_FLOW_MOD):{
-                struct ofl_ext_flow_mod *fm = (struct ofl_ext_flow_mod*) exp;
-                error = ofl_msg_ext_pack_flow_mod(fm, buf, buf_len);            
-            }
-            case (EXT_FLOW_REMOVED):{
-                //return ofl_msg_ext_pack_flow_removed(exp, buf, buf_len);
-                break;
-            }
-        
-        }
-     
-        
-     oh = (struct ofp_ext_header *)(*buf);
-
-     oh->vendor = htonl(EXTENDED_MATCH_ID);
-     oh->subtype = htonl(EXT_FLOW_MOD); 
-     return error;
-} 
-
-/*
-int
-ofl_msg_ext_pack_flow_removed(struct ofl_nx_flow_removed *msg, uint8_t **buf, size_t *buf_len) {
-    struct nx_flow_removed *ofr;
-
-    *buf_len = sizeof(struct nx_flow_removed);
-    *buf     = (uint8_t *)malloc(*buf_len);
-
-    ofr = (struct nx_flow_removed *)(*buf);
-    ofr->cookie        = hton64(msg->cookie);
-    ofr->priority      = hton64(msg->priority);
-    ofr->reason        =        msg->reason;
-    ofr->table_id      =        msg->table_id;
-    ofr->duration_sec  = htonl( msg->duration_sec);
-    ofr->duration_nsec = htonl( msg->duration_nsec);
-    ofr->idle_timeout  = htons( msg->idle_timeout);
-    memset(ofr->pad, 0x00, 2);
-    ofr->packet_count  = hton64(msg->packet_count);
-    ofr->byte_count    = hton64(msg->byte_count);
-
-    ofl_exp_match_pack(msg->match, &(ofr->match.header));
-
-    return 0;
-}*/
-
-
 
 int
 ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len){
@@ -167,16 +142,12 @@ ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t 
 
 }
 
-
-
-
 static size_t
 ofl_ext_flow_stats_pack(struct ofl_flow_stats *src, uint8_t **dst){
 
         struct ofp_ext_flow_stats *stats;
-        size_t total_len, len;
-        //uint8_t *data;
-        uint8_t *ptr,data;
+        size_t total_len;
+        uint8_t *ptr;
         size_t i;
  
         total_len = (sizeof(struct ofp_ext_flow_stats) - 4) + src->match->length + 
@@ -202,14 +173,11 @@ ofl_ext_flow_stats_pack(struct ofl_flow_stats *src, uint8_t **dst){
         ofl_exp_match_pack(src->match, &(stats->match->header));   
         memcpy(ptr, &stats->match->header, src->match->length); 
         ptr += src->match->length; 
-        
-        //ptr = (uint8_t *)stats->instructions;
+       
         
         for (i=0; i<src->instructions_num; i++) {
             ptr += ofl_structs_instructions_pack(src->instructions[i], (struct ofp_instruction *)ptr, NULL);
-            //data += len;
-        }
-       
+        } 
         return total_len;
 }
 
@@ -232,19 +200,42 @@ size_t
 ofl_ext_pack_stats_reply(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, size_t *buf_len) {
     
     struct ofl_msg_stats_reply_experimenter *exp = (struct ofl_msg_stats_reply_experimenter *) msg;  
-    struct ofp_stats_reply *resp;
+    struct ofp_stats_reply *resp; 
+    struct ofl_flow_stats ** stats = (struct ofl_flow_stats **) exp->data;
     size_t i,len;
     uint8_t *data;
  
-    *buf_len = sizeof(struct ofp_stats_reply) + ofl_ext_flow_stats_ofp_total_len( (struct ofl_flow_stats **) &exp->data, exp->data_length, NULL);
+    *buf_len = sizeof(struct ofp_stats_reply) + ofl_ext_flow_stats_ofp_total_len(stats, exp->data_length, NULL);
     *buf     = (uint8_t *)malloc(*buf_len);
     resp = (struct ofp_stats_reply *)(*buf);
     data = (uint8_t *)resp->body;
-    len = 0;
     for(i = 0; i < exp->data_length;i++){
-        len = ofl_ext_flow_stats_pack((struct ofl_flow_stats*) ((uint8_t*) exp->data + len) , &data);
-        data += len;   
+        data += ofl_ext_flow_stats_pack(stats[i] , &data);
     }  
   
     return 0;
 }
+
+int
+ofl_ext_pack_flow_removed(struct ofl_ext_msg_flow_removed *msg, uint8_t **buf, size_t *buf_len) {
+    struct ofp_ext_flow_removed *ofr;
+
+    *buf_len = (sizeof(struct ofp_ext_flow_removed) -sizeof(struct ext_match)) + msg->stats->match->length ;
+    *buf     = (uint8_t *)malloc(*buf_len);
+
+    ofr = (struct ofp_ext_flow_removed *)(*buf);
+    ofr->cookie        = hton64(msg->stats->cookie);
+    ofr->priority      = hton64(msg->stats->priority);
+    ofr->reason        =        msg->reason;
+    ofr->table_id      =        msg->stats->table_id;
+    ofr->duration_sec  = htonl( msg->stats->duration_sec);
+    ofr->duration_nsec = htonl( msg->stats->duration_nsec);
+    ofr->idle_timeout  = htons( msg->stats->idle_timeout);
+    memset(ofr->pad, 0x00, 2);
+    ofr->packet_count  = hton64(msg->stats->packet_count);
+    ofr->byte_count    = hton64(msg->stats->byte_count);
+    ofl_exp_match_pack(msg->stats->match, &(ofr->match.header));
+
+    return 0;
+}
+

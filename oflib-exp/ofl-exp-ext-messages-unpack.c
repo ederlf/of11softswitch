@@ -54,13 +54,10 @@ ofl_ext_message_unpack(struct ofp_header *oh, size_t *len, struct ofl_msg_experi
     h = (struct ofp_ext_header *) oh;
     switch(ntohl(h->subtype)){
         case(EXT_FLOW_MOD):{
-
             return ofl_ext_unpack_flow_mod(oh, len, msg);
-     
         }
         case(EXT_FLOW_REMOVED):{
-           // return ofl_ext_unpack_flow_removed(oh, len, msg);
-        
+           return ofl_ext_unpack_flow_removed(oh, len, msg);
         }
 
    }
@@ -137,51 +134,6 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     return 0;
 }
 
-/*
-ofl_err
-ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_experimenter **msg) {
-    struct nx_flow_removed *sr;
-    struct ofl_nx_flow_removed *dr;
-    ofl_err error;
-
-    /*if (*len < (sizeof(struct ofp_flow_removed) - sizeof(struct ofp_match))) {
-        OFL_LOG_WARN(LOG_MODULE, "Received FLOW_REMOVED message has invalid length (%zu).", *len);
-        return OFL_ERROR;
-    }*
-
-    sr = (struct nx_flow_removed *)src;
-
-    if (sr->table_id == 0xff) {
-        if (OFL_LOG_IS_WARN_ENABLED(LOG_MODULE)) {
-            char *ts = ofl_table_to_string(sr->table_id);
-            OFL_LOG_WARN(LOG_MODULE, "Received FLOW_REMOVED message has invalid table_id (%s).", ts);
-            free(ts);
-        }
-        return ofl_error(OFPET_BAD_ACTION, OFPBAC_BAD_ARGUMENT);
-    }
-    *len -= (sizeof(struct nx_flow_removed) - sizeof(struct ofp_match));
-
-    dr = (struct ofl_nx_flow_removed *)malloc(sizeof(struct ofl_nx_flow_removed));
-    dr->reason = (enum ofp_flow_removed_reason)sr->reason;
-
-    dr->table_id         =        sr->table_id;
-    dr->duration_sec     = ntohl( sr->duration_sec);
-    dr->duration_nsec    = ntohl( sr->duration_nsec);
-    dr->priority         = ntoh64(sr->priority);
-    dr->idle_timeout     = ntohs( sr->idle_timeout);
-    dr->cookie           = ntoh64(sr->cookie);
-    dr->packet_count     = ntoh64(sr->packet_count);
-    dr->byte_count       = ntoh64(sr->byte_count);
-
-    error = ofl_exp_match_unpack(&(sr->match.header), len, &(dr->match));
-    if (error) {
-        free(dr->match);
-        free(dr);
-        return error;
-    }
-    *msg = (struct ofl_msg_header *)dr;
-    return 0;
-}*/
 
 ofl_err
 ofl_ext_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, struct ofl_msg_header **msg) {
@@ -228,6 +180,7 @@ ofl_ext_flow_stats_unpack(uint8_t *stats, size_t *len, struct ofl_flow_stats **d
     ofl_err error;
     size_t i;
    
+
     src = (struct ofp_ext_flow_stats*) stats;
     struct ext_match *match = (struct ext_match*) (stats + (sizeof(struct ofp_ext_flow_stats) -4));
    
@@ -268,7 +221,6 @@ ofl_ext_flow_stats_unpack(uint8_t *stats, size_t *len, struct ofl_flow_stats **d
     }
    
     stats +=  ntohs(match->header.length);
-   
     error = ofl_utils_count_ofp_instructions(stats, *len, &s->instructions_num);
     if (error) {
         ofl_exp_match_free(s->match);
@@ -297,13 +249,14 @@ ofl_ext_flow_stats_unpack(uint8_t *stats, size_t *len, struct ofl_flow_stats **d
 }
 
 
-
 ofl_err
 ofl_ext_unpack_stats_reply(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_stats_reply_header **msg) {
     struct ofp_ext_flow_stats *stat;
     struct ofl_msg_stats_reply_experimenter *dm;
+    struct ofl_flow_stats ** st_dst;
     ofl_err error;
     size_t i,pos;
+    size_t * flow_stats_len = malloc (sizeof (size_t));
 
     // ofp_stats_reply was already checked and subtracted in unpack_stats_reply
     
@@ -315,12 +268,16 @@ ofl_ext_unpack_stats_reply(struct ofp_stats_reply *os, size_t *len, struct ofl_m
         return error;
     }
     dm->data = (uint8_t*) malloc(dm->data_length * sizeof(struct ofl_ext_flow_stats *));
+    st_dst = (struct ofl_flow_stats **) dm->data;
+    
     pos = 0;
     
     for (i = 0; i < dm->data_length; i++) {
-        size_t len_bf =  *len;
-        error = ofl_ext_flow_stats_unpack((uint8_t*) stat, len, (struct ofl_flow_stats **)((uint8_t *) &(dm->data) + pos) );
-        pos = len_bf - *len;
+        *flow_stats_len = ntohs(stat->length);
+        *len -= *flow_stats_len;
+        error = ofl_ext_flow_stats_unpack((uint8_t*) stat + pos, flow_stats_len, &(st_dst[i]));
+        pos +=   *flow_stats_len;
+        
         if (error) {
             OFL_UTILS_FREE_ARR_FUN2((struct ofl_flow_stats *) &dm->data, i,
                                     ofl_structs_free_flow_stats, NULL);
@@ -335,3 +292,53 @@ ofl_ext_unpack_stats_reply(struct ofp_stats_reply *os, size_t *len, struct ofl_m
    
 }
 
+ofl_err
+ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_experimenter **msg) {
+    struct ofp_ext_flow_removed *sr;
+    struct ofl_ext_msg_flow_removed *dr;
+    ofl_err error;
+
+    sr = (struct ofp_ext_flow_removed *)src;
+    if (*len < (sizeof(struct ofp_ext_flow_removed) - ntohs(sr->match.header.length))) {
+        OFL_LOG_WARN(LOG_MODULE, "Received FLOW_REMOVED message has invalid length (%zu).", *len);
+        return OFL_ERROR;
+    }
+
+    if (sr->table_id == 0xff) {
+        if (OFL_LOG_IS_WARN_ENABLED(LOG_MODULE)) {
+            char *ts = ofl_table_to_string(sr->table_id);
+            OFL_LOG_WARN(LOG_MODULE, "Received FLOW_REMOVED message has invalid table_id (%s).", ts);
+            free(ts);
+        }
+        return ofl_error(OFPET_BAD_ACTION, OFPBAC_BAD_ARGUMENT);
+    }
+    *len -= (sizeof(struct ofp_ext_flow_removed) -sizeof(struct ext_match));
+    
+    dr = (struct ofl_ext_msg_flow_removed *)malloc(sizeof(struct ofl_ext_msg_flow_removed));
+    dr->header.type = ntohl(sr->header.subtype);
+    dr->header.header.experimenter_id =  ntohl(sr->header.vendor);
+    dr->reason = (enum ofp_flow_removed_reason)sr->reason;
+
+    dr->stats = (struct ofl_flow_stats *)malloc(sizeof(struct ofl_flow_stats));
+    dr->stats->table_id         =        sr->table_id;
+    dr->stats->duration_sec     = ntohl( sr->duration_sec);
+    dr->stats->duration_nsec    = ntohl( sr->duration_nsec);
+    dr->stats->priority         = ntoh64(sr->priority);
+    dr->stats->idle_timeout     = ntohs( sr->idle_timeout);
+    dr->stats->hard_timeout     = 0;
+    dr->stats->cookie           = ntoh64(sr->cookie);
+    dr->stats->packet_count     = ntoh64(sr->packet_count);
+    dr->stats->byte_count       = ntoh64(sr->byte_count);
+    dr->stats->instructions_num = 0;
+    dr->stats->instructions     = NULL;
+
+    error = ofl_exp_match_unpack(&(sr->match.header), len, &(dr->stats->match));
+    if (error) {
+        free(dr->stats);
+        free(dr);
+        return error;
+    }
+
+    *msg = (struct ofl_msg_experimenter *)dr;
+    return 0;
+}

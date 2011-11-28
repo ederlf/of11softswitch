@@ -47,6 +47,59 @@
 #define LOG_MODULE ofl_exp
 OFL_LOG_INIT(LOG_MODULE)
 
+
+static void
+ofl_ext_flow_stats_print(FILE *stream, struct ofl_flow_stats *s) {
+    size_t i;
+
+    fprintf(stream, "{table=\"");
+    ofl_table_print(stream, s->table_id);
+    fprintf(stream, "\", match=\"");
+    ofl_exp_match_print(stream, s->match);
+    fprintf(stream, "\", dur_s=\"%u\", dur_ns=\"%u\", prio=\"%u\", "
+                          "idle_to=\"%u\", hard_to=\"%u\", cookie=\"0x%"PRIx64"\", "
+                          "pkt_cnt=\"%"PRIu64"\", byte_cnt=\"%"PRIu64"\", insts=[",
+                  s->duration_sec, s->duration_nsec, s->priority,
+                  s->idle_timeout, s->hard_timeout, s->cookie,
+                  s->packet_count, s->byte_count);
+
+    for (i=0; i<s->instructions_num; i++) {
+        ofl_structs_instruction_print(stream, s->instructions[i], NULL);
+        if (i < s->instructions_num - 1) { fprintf(stream, ", "); };
+    }
+
+    fprintf(stream, "]}");
+}
+
+
+void
+ofl_ext_msg_print_stats_reply_flow(struct ofl_msg_stats_reply_experimenter *msg, FILE *stream) {
+    size_t i;
+
+    
+    fprintf(stream, ", ext_flow_stats=[");
+    struct ofl_flow_stats **stats = (struct ofl_flow_stats **) msg->data;
+    for (i=0; i<msg->data_length; i++) {
+       
+        ofl_ext_flow_stats_print(stream, stats[i]);
+        //stats +=  ( sizeof(struct ofl_flow_stats ) -4) + stats->match->length + ofl_structs_instructions_ofp_len(*stats->instructions, NULL);
+        if (i < msg->data_length - 1) { fprintf(stream, ", "); };
+    }
+
+    fprintf(stream, "]");
+}
+
+
+static void
+ofl_ext_free_flow_stats(struct ofl_flow_stats *stats) {
+    //OFL_UTILS_FREE_ARR_FUN2(stats->instructions, stats->instructions_num,
+      //                      ofl_structs_free_instruction, NULL);
+    //ofl_exp_match_free(stats->match);
+    free(stats);
+}
+
+
+
 char *
 ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
 
@@ -89,7 +142,14 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
                   
                 break;
             }
-        
+            case (EXT_FLOW_REMOVED):{
+                    struct ofl_ext_msg_flow_removed * fr =  (struct ofl_ext_msg_flow_removed *) msg;
+                    fprintf(stream, "{reas=\"");
+                    ofl_flow_removed_reason_print(stream, fr->reason);
+                    fprintf(stream, "\", stats=");
+                    ofl_ext_flow_stats_print(stream, fr->stats);
+                    fprintf(stream, "}");          
+            }
         
         }
        
@@ -97,6 +157,7 @@ ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
     fclose(stream);
     return str;
 }
+
 int
 ofl_ext_msg_free(struct ofl_msg_experimenter *msg){
 
@@ -123,6 +184,8 @@ ofl_ext_free_flow_mod(struct ofl_ext_flow_mod *msg, bool with_match, bool with_i
     return 0;
 }
 
+
+
 ofl_err
 ofl_utils_count_ofp_ext_flow_stats(void *data, size_t data_len, size_t *count) {
     struct ofp_ext_flow_stats *stat;
@@ -146,53 +209,6 @@ ofl_utils_count_ofp_ext_flow_stats(void *data, size_t data_len, size_t *count) {
 
 }
 
-static void
-ofl_ext_flow_stats_print(FILE *stream, struct ofl_flow_stats *s) {
-    size_t i;
-
-    fprintf(stream, "{table=\"");
-    ofl_table_print(stream, s->table_id);
-    fprintf(stream, "\", match=\"");
-    ofl_exp_match_print(stream, s->match);
-    fprintf(stream, "\", dur_s=\"%u\", dur_ns=\"%u\", prio=\"%u\", "
-                          "idle_to=\"%u\", hard_to=\"%u\", cookie=\"0x%"PRIx64"\", "
-                          "pkt_cnt=\"%"PRIu64"\", byte_cnt=\"%"PRIu64"\", insts=[",
-                  s->duration_sec, s->duration_nsec, s->priority,
-                  s->idle_timeout, s->hard_timeout, s->cookie,
-                  s->packet_count, s->byte_count);
-
-    for (i=0; i<s->instructions_num; i++) {
-        ofl_structs_instruction_print(stream, s->instructions[i], NULL);
-        if (i < s->instructions_num - 1) { fprintf(stream, ", "); };
-    }
-
-    fprintf(stream, "]}");
-}
-
-void
-ofl_ext_msg_print_stats_reply_flow(struct ofl_msg_stats_reply_experimenter *msg, FILE *stream) {
-    size_t i;
-
-    
-    fprintf(stream, ", ext_flow_stats=[");
-    struct ofl_flow_stats *stats = (struct ofl_flow_stats *) msg->data;
-    for (i=0; i<msg->data_length; i++) {
-       
-        ofl_ext_flow_stats_print(stream, stats);
-        stats += ( sizeof(struct ofl_flow_stats ) -4) + stats->match->length + ofl_structs_instructions_ofp_len(*stats->instructions, NULL);
-        if (i < msg->data_length - 1) { fprintf(stream, ", "); };
-    }
-
-    fprintf(stream, "]");
-}
-
-static void
-ofl_ext_free_flow_stats(struct ofl_flow_stats *stats) {
-    //OFL_UTILS_FREE_ARR_FUN2(stats->instructions, stats->instructions_num,
-      //                      ofl_structs_free_instruction, NULL);
-    //ofl_exp_match_free(stats->match);
-    free(stats);
-}
 
 int ofl_ext_stats_reply_free(struct ofl_msg_stats_reply_header *msg){
 
@@ -207,6 +223,14 @@ int ofl_ext_stats_reply_free(struct ofl_msg_stats_reply_header *msg){
     }*/
     return 0;    
                                 
+}
 
+int
+ofl_ext_free_flow_removed(struct ofl_msg_flow_removed *msg, bool with_stats, struct ofl_exp *exp) {
+    if (with_stats) {
+        ofl_structs_free_flow_stats(msg->stats, exp);
+    }
+    free(msg);
+    return 0;
 }
 
