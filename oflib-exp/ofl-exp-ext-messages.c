@@ -76,28 +76,24 @@ void
 ofl_ext_msg_print_stats_reply_flow(struct ofl_msg_stats_reply_experimenter *msg, FILE *stream) {
     size_t i;
 
-    
-    fprintf(stream, ", ext_flow_stats=[");
     struct ofl_flow_stats **stats = (struct ofl_flow_stats **) msg->data;
+    fprintf(stream, ", ext_flow_stats=[");
     for (i=0; i<msg->data_length; i++) {
        
         ofl_ext_flow_stats_print(stream, stats[i]);
-        //stats +=  ( sizeof(struct ofl_flow_stats ) -4) + stats->match->length + ofl_structs_instructions_ofp_len(*stats->instructions, NULL);
-        if (i < msg->data_length - 1) { fprintf(stream, ", "); };
+        if (i < msg->data_length - 1) { fprintf(stream, "\n"); };
     }
 
     fprintf(stream, "]");
 }
 
-
 static void
 ofl_ext_free_flow_stats(struct ofl_flow_stats *stats) {
-    //OFL_UTILS_FREE_ARR_FUN2(stats->instructions, stats->instructions_num,
-      //                      ofl_structs_free_instruction, NULL);
-    //ofl_exp_match_free(stats->match);
+    OFL_UTILS_FREE_ARR_FUN2(stats->instructions, stats->instructions_num,
+                            ofl_structs_free_instruction, NULL);
+    ofl_exp_match_free(stats->match);
     free(stats);
 }
-
 
 
 char *
@@ -212,15 +208,13 @@ ofl_utils_count_ofp_ext_flow_stats(void *data, size_t data_len, size_t *count) {
 
 int ofl_ext_stats_reply_free(struct ofl_msg_stats_reply_header *msg){
 
-    struct ofl_flow_stats *stats;
     int i;
+    struct ofl_flow_stats **stats;
     struct ofl_msg_stats_reply_experimenter *exp_st = (struct ofl_msg_stats_reply_experimenter *)msg;
-    stats = (struct ofl_flow_stats *) exp_st;
-    /*for (i = 0; i < exp_st->data_length; i++ ){    
-        ofl_ext_free_flow_stats(stats);
-        printf("LEN stats->match->length %d\n",stats->match->length);
-        stats += ( sizeof(struct ofl_flow_stats ) -4) + stats->match->length + ofl_structs_instructions_ofp_len(*stats->instructions, NULL);     
-    }*/
+    stats = (struct ofl_flow_stats **) exp_st->data;
+    for (i = 0; i < exp_st->data_length; i++ ){    
+        ofl_ext_free_flow_stats(stats[i]);
+    }
     return 0;    
                                 
 }

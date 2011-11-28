@@ -149,7 +149,8 @@ parse_table_mod(char *str, struct ofl_msg_table_mod *msg);
 static void
 make_all_match(struct ofl_match_header **match);
 
-
+static void
+make_ext_all_match(struct ofl_match_header **match);
 
 
 static int
@@ -490,7 +491,7 @@ stats_flow(struct vconn *vconn, int argc, char *argv[]) {
         if (argc > 1) {
             parse_match(argv[1], &(request.match), preferred_flow_format);
         } else {
-            make_all_match(&(request.match));
+            make_ext_all_match(&(request.match));
         }
             
             dpctl_transact_and_print(vconn, (struct ofl_msg_header *)&request, NULL);
@@ -1597,6 +1598,17 @@ make_all_match(struct ofl_match_header **match) {
     m->nw_src_mask = 0xffffffff;
     m->nw_dst_mask = 0xffffffff;
     m->metadata_mask = 0xffffffffffffffffULL;
+
+    (*match) = (struct ofl_match_header *)m;
+}
+
+static void
+make_ext_all_match(struct ofl_match_header **match) {
+    struct ofl_ext_match *m = xmalloc(sizeof(struct ofl_ext_match));
+
+    m->header.type = EXT_MATCH;
+    m->header.length = sizeof(struct ext_match);
+    flex_array_init(&(m->match_fields));
 
     (*match) = (struct ofl_match_header *)m;
 }

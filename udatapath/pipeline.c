@@ -340,10 +340,11 @@ pipeline_ext_handle_stats_request_flow(struct pipeline *pl,
     struct ofl_flow_stats **stats = xmalloc(sizeof(struct ofl_flow_stats *));
     size_t stats_size = 1;
     size_t stats_num = 0;
-
+    printf("TABLE ID %x\n", msg->table_id);
     if (msg->table_id == 0xff) {
         size_t i;
         for (i=0; i<PIPELINE_TABLES; i++) {
+            printf("PIPELINE_TABLES %d\n", i);
             ext_flow_table_stats(pl->tables[i], msg, &stats, &stats_size, &stats_num);
         }
     } else {
