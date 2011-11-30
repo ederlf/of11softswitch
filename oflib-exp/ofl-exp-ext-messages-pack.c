@@ -54,8 +54,7 @@ ofl_ext_message_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *bu
     
         struct ofl_ext_msg_header *exp = (struct ofl_ext_msg_header *)msg;
         struct ofp_ext_header *oh; 
-        
-        
+         
         int error = 0;
         switch (exp->type) {
             case (EXT_FLOW_MOD):{
@@ -202,7 +201,7 @@ ofl_ext_pack_stats_reply(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, 
     struct ofl_msg_stats_reply_experimenter *exp = (struct ofl_msg_stats_reply_experimenter *) msg;  
     struct ofp_stats_reply *resp; 
     struct ofl_flow_stats ** stats = (struct ofl_flow_stats **) exp->data;
-    size_t i,len;
+    size_t i;
     uint8_t *data;
  
     *buf_len = sizeof(struct ofp_stats_reply) + ofl_ext_flow_stats_ofp_total_len(stats, exp->data_length, NULL);

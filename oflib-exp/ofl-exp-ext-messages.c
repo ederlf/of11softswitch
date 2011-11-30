@@ -47,7 +47,6 @@
 #define LOG_MODULE ofl_exp
 OFL_LOG_INIT(LOG_MODULE)
 
-
 static void
 ofl_ext_flow_stats_print(FILE *stream, struct ofl_flow_stats *s) {
     size_t i;
@@ -95,6 +94,22 @@ ofl_ext_free_flow_stats(struct ofl_flow_stats *stats) {
     free(stats);
 }
 
+void
+ofl_ext_stats_req_print(struct ofl_ext_flow_stats_request *msg, FILE *stream)
+{
+
+    fprintf(stream, ", table=\"");
+    ofl_table_print(stream, msg->table_id);
+    fprintf(stream, "\", oport=\"");
+    ofl_port_print(stream, msg->out_port);
+    fprintf(stream, "\", ogrp=\"");
+    ofl_group_print(stream, msg->out_group);
+    fprintf(stream, "\", cookie=0x%"PRIx64"\", mask=0x%"PRIx64"\", match=",
+                  msg->cookie, msg->cookie_mask);
+    if (msg->match != NULL)
+        ofl_exp_match_print(stream, msg->match);
+
+}
 
 char *
 ofl_ext_message_to_string(struct ofl_msg_experimenter *msg){
@@ -180,8 +195,6 @@ ofl_ext_free_flow_mod(struct ofl_ext_flow_mod *msg, bool with_match, bool with_i
     return 0;
 }
 
-
-
 ofl_err
 ofl_utils_count_ofp_ext_flow_stats(void *data, size_t data_len, size_t *count) {
     struct ofp_ext_flow_stats *stat;
@@ -205,7 +218,6 @@ ofl_utils_count_ofp_ext_flow_stats(void *data, size_t data_len, size_t *count) {
 
 }
 
-
 int ofl_ext_stats_reply_free(struct ofl_msg_stats_reply_header *msg){
 
     int i;
@@ -228,3 +240,11 @@ ofl_ext_free_flow_removed(struct ofl_msg_flow_removed *msg, bool with_stats, str
     return 0;
 }
 
+int
+ofl_ext_free_stats_req_flow(struct ofl_ext_flow_stats_request *req){
+
+    ofl_exp_match_free(req->match);
+    free(req);
+    return 0;
+
+}

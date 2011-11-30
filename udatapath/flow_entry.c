@@ -48,6 +48,7 @@
 #include "timeval.h"
 #include "util.h"
 #include "match_std.h"
+#include "match_ext.h"
 #include "nx-match.h"
 
 #include "vlog.h"

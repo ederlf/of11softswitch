@@ -702,7 +702,6 @@ ofl_msg_unpack_stats_request_group(struct ofp_stats_request *os, size_t *len, st
     return 0;
 }
 
-
 static ofl_err
 ofl_msg_unpack_stats_request_empty(struct ofp_stats_request *os UNUSED, size_t *len, struct ofl_msg_header **msg) {
     // ofp_stats_request length was checked at ofl_msg_unpack_stats_request
@@ -805,7 +804,6 @@ ofl_msg_unpack_stats_reply_desc(struct ofp_stats_reply *os, size_t *len, struct 
     *msg = (struct ofl_msg_header *)dm;
     return 0;
 }
-
 
 static ofl_err
 ofl_msg_unpack_stats_reply_flow(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_header **msg, struct ofl_exp *exp) {

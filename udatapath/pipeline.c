@@ -238,7 +238,7 @@ pipeline_handle_ext_flow_mod(struct pipeline *pl, struct ofl_ext_flow_mod *msg,
             }
         }
 
-        ofl_msg_free_flow_mod(msg, !match_kept, !insts_kept, pl->dp->exp);
+        ofl_ext_free_flow_mod(msg, !match_kept, !insts_kept, pl->dp->exp);
         return 0;
     }          
 }
@@ -331,7 +331,7 @@ pipeline_handle_table_mod(struct pipeline *pl,
     return 0;
 }
 
-/* Handle an extended flow stats request. */
+
 ofl_err
 pipeline_ext_handle_stats_request_flow(struct pipeline *pl,
                                    struct ofl_ext_flow_stats_request *msg,
@@ -340,11 +340,9 @@ pipeline_ext_handle_stats_request_flow(struct pipeline *pl,
     struct ofl_flow_stats **stats = xmalloc(sizeof(struct ofl_flow_stats *));
     size_t stats_size = 1;
     size_t stats_num = 0;
-    printf("TABLE ID %x\n", msg->table_id);
     if (msg->table_id == 0xff) {
         size_t i;
         for (i=0; i<PIPELINE_TABLES; i++) {
-            printf("PIPELINE_TABLES %d\n", i);
             ext_flow_table_stats(pl->tables[i], msg, &stats, &stats_size, &stats_num);
         }
     } else {
@@ -360,7 +358,6 @@ pipeline_ext_handle_stats_request_flow(struct pipeline *pl,
                  .data_length    = stats_num,
                  .data = (uint8_t*) stats
                 };
-        struct ofl_flow_stats *src = (struct ofl_flow_stats *) reply.data;
         dp_send_message(pl->dp, (struct ofl_msg_header *)&reply, sender);
     }
     

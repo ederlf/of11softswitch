@@ -76,10 +76,12 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     uint8_t * buff;
     
     sm = (struct ofp_ext_flow_mod *) src;
-    if (*len < ((sizeof(struct ofp_ext_flow_mod)) - sizeof(struct ext_match) )) {
+    
+    
+     if (*len < ((sizeof(struct ofp_ext_flow_mod)) - sizeof(struct ext_match) )) {
         OFL_LOG_WARN(LOG_MODULE, "Received FLOW_MOD message has invalid length (%zu).", *len);
         return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
-    }
+     }
 
     *len -= (sizeof(struct ofp_ext_flow_mod) - 4) ;
     
@@ -144,11 +146,10 @@ ofl_ext_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, str
     struct ofp_ext_flow_stats_request *sm;
     struct ofl_ext_flow_stats_request *dm;
     ofl_err error = 0;
-    // ofp_stats_request length was checked at ofl_msg_unpack_stats_request
 
-    
+    // ofp_stats_request length was checked at ofl_msg_unpack_stats_request
     sm = (struct ofp_ext_flow_stats_request *)os->body;
-    if (*len < ((sizeof(struct ofp_ext_flow_stats_request)) - ntohs(sm->match.header.length))) {
+    if (*len < ((sizeof(struct ofp_ext_flow_mod)) - sizeof(struct ext_match) )) {
         OFL_LOG_WARN(LOG_MODULE, "Received FLOW stats request has invalid length (%zu).", *len);
         return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_LEN);
     }
@@ -188,13 +189,11 @@ ofl_ext_flow_stats_unpack(uint8_t *stats, size_t *len, struct ofl_flow_stats **d
     src = (struct ofp_ext_flow_stats*) stats;
     match = (struct ext_match*) (stats + (sizeof(struct ofp_ext_flow_stats) -4));
    
-    /* Eder: Variable match can be greater than the ofp_ext_flow_stats. Doesn't makes sense anymore    
-     *
-     * if (*len < ((sizeof(struct ofp_ext_flow_stats) -4) - ntohs(match->header.length))) {
-     *    OFL_LOG_WARN(LOG_MODULE, "Received flow stats has invalid length (%zu).", *len);
-     *    return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
-     * }
-    */
+    if (*len < ((sizeof(struct ofp_ext_flow_stats)) - sizeof(struct ext_match) )) {
+         OFL_LOG_WARN(LOG_MODULE, "Received flow stats has invalid length (%zu).", *len);
+         return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
+    }
+    
 
     if (src->table_id == 0xff) {
         if (OFL_LOG_IS_WARN_ENABLED(LOG_MODULE)) {
@@ -255,7 +254,6 @@ ofl_ext_flow_stats_unpack(uint8_t *stats, size_t *len, struct ofl_flow_stats **d
 
 }
 
-
 ofl_err
 ofl_ext_unpack_stats_reply(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_stats_reply_header **msg) {
     struct ofp_ext_flow_stats *stat;
@@ -307,12 +305,11 @@ ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_
 
     sr = (struct ofp_ext_flow_removed *)src;
     
-    /* Eder: Variable match can be greater than the ofp_ext_flow_removed. Doesn't makes sense anymore  
-    if (*len < (sizeof(struct ofp_ext_flow_removed) - ntohs(sr->match.header.length))) {
+    if (*len < ((sizeof(struct ofp_ext_flow_removed)) - sizeof(struct ext_match) )) {
         OFL_LOG_WARN(LOG_MODULE, "Received FLOW_REMOVED message has invalid length (%zu).", *len);
         return OFL_ERROR;
     }
-    */
+    
     
     if (sr->table_id == 0xff) {
         if (OFL_LOG_IS_WARN_ENABLED(LOG_MODULE)) {

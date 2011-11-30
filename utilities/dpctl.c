@@ -195,7 +195,7 @@ ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format);
 static struct ofl_exp_stats dpctl_exp_stats = 
         {.req_pack      = ofl_exp_req_pack,
          .req_unpack    = ofl_exp_req_unpack,
-         .req_free      = ofl_exp_req_free,
+         .req_free      = ofl_exp_free_stats_req,
          .req_to_string = ofl_req_to_string,
          .reply_pack    = ofl_exp_reply_pack,
          .reply_unpack  = ofl_exp_reply_unpack,
@@ -1543,9 +1543,8 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                    ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
             }
             else {
-                 ext_put_8(&ext_m->match_fields, TLV_EXT_IPV6_RH_ID , 43 /*Routing Next Header Value */, 0xff);
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_RH_ID , 43 /*Routing Next Header Value */, 0xff);
                  ext_m->header.length += 5;
-
             }
             continue;
         }
@@ -1557,7 +1556,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             else {
                  uint8_t v = 0;
                  uint8_t mask = 0xff;
-                 ext_put_8(&ext_m->match_fields, TLV_EXT_IPV6_HBH_ID, v /*Hop by Hop Header Value */, mask);
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_HBH_ID, v /*Hop by Hop Header Value */, mask);
                  ext_m->header.length += 5;
 
             }

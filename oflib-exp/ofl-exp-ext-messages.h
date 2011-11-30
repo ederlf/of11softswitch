@@ -138,6 +138,11 @@ ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t 
 ofl_err
 ofl_ext_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, struct ofl_msg_header **msg);
 
+void
+ofl_ext_stats_req_print(struct ofl_ext_flow_stats_request *msg, FILE *stream);
+
+
+
 ofl_err
 ofl_utils_count_ofp_ext_flow_stats(void *data, size_t data_len, size_t *count);
 
@@ -160,6 +165,12 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
 
 ofl_err
 ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_experimenter **msg);
+
+int
+ofl_ext_free_flow_removed(struct ofl_msg_flow_removed *msg, bool with_stats, struct ofl_exp *exp);
+
+int
+ofl_ext_free_stats_req_flow(struct ofl_ext_flow_stats_request *req);
 
 int 
 ofl_ext_msg_free(struct ofl_msg_experimenter *msg);

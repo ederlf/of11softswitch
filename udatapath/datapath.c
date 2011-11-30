@@ -119,7 +119,7 @@ struct remote {
 static struct ofl_exp_stats dpath_exp_stats = 
         {.req_pack      = ofl_exp_req_pack,
          .req_unpack    = ofl_exp_req_unpack,
-         .req_free      = ofl_exp_req_free,
+         .req_free      = ofl_exp_free_stats_req,
          .req_to_string = ofl_req_to_string,
          .reply_pack    = ofl_exp_reply_pack,
          .reply_unpack  = ofl_exp_reply_unpack,

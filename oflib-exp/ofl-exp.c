@@ -123,8 +123,6 @@ ofl_exp_msg_free(struct ofl_msg_experimenter *msg) {
     }
 }
 
-
-
 char *
 ofl_exp_msg_to_string(struct ofl_msg_experimenter *msg) {
     
@@ -165,16 +163,8 @@ int ofl_exp_reply_pack(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, si
 
 ofl_err ofl_exp_reply_unpack(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_stats_reply_header **msg){
 
-    //struct ofp_stats_request *req = (struct ofp_stats_request  *) (os); 
-
-    //printf("Saindo %x\n", req->experimenter);
-    //switch (htonl(req->experimenter)) {
-       //  case (EXTENDED_MATCH_ID):{
-         //   printf("Entrei\n");
-        return ofl_ext_unpack_stats_reply(os, len,  msg); 
-      //  }
+    return ofl_ext_unpack_stats_reply(os, len,  msg); 
      
-    // }
     
 }
 
@@ -192,20 +182,13 @@ int ofl_exp_req_pack(struct ofl_msg_stats_request_header *msg, uint8_t **buf, si
 
 ofl_err ofl_exp_req_unpack(struct ofp_stats_request *os, size_t *len, struct ofl_msg_stats_request_header **msg){
 
-    //struct ofp_stats_request *req = (struct ofp_stats_request  *) (os); 
-
-    //printf("Saindo %x\n", req->experimenter);
-    //switch (htonl(req->experimenter)) {
-       //  case (EXTENDED_MATCH_ID):{
-         //   printf("Entrei\n");
     return ofl_ext_unpack_stats_request_flow(os, len, (struct ofl_msg_header**) msg); 
-      //  }
-     
-    // }
-    
+       
 }
 
-int ofl_exp_req_free(struct ofl_msg_stats_request_header *msg){
+int ofl_exp_free_stats_req(struct ofl_msg_stats_request_header *msg){
+
+   return ofl_ext_free_stats_req_flow((struct ofl_ext_flow_stats_request*) msg);
 
 }
 
@@ -215,11 +198,12 @@ char* ofl_req_to_string(struct ofl_msg_stats_request_header *msg){
     size_t str_size;
     FILE *stream = open_memstream(&str, &str_size);
     fprintf(stream, "type = flow");
+    fprintf(stream, "\", flags=\"0x%"PRIx32"\"", msg->flags);
+    ofl_ext_stats_req_print((struct ofl_ext_flow_stats_request *) msg, stream); 
     fclose(stream);
     return str;
 
 }
-
 
 char * ext_reply_to_string (struct ofl_msg_stats_reply_header *msg)
 {

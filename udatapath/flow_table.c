@@ -39,6 +39,7 @@
 #include "oflib/ofl.h"
 #include "time.h"
 #include "packet_handle_std.h"
+#include "packet_handle_ext.h"
 #include "match_std.h"
 #include "match_ext.h"
 
@@ -426,19 +427,20 @@ ext_flow_table_stats(struct flow_table *table, struct ofl_ext_flow_stats_request
 
     LIST_FOR_EACH(entry, struct flow_entry, match_node, &table->match_entries) {
            
-           a = msg->out_port == OFPP_ANY || flow_entry_has_out_port(entry, msg->out_port);
-           b = msg->out_group == OFPG_ANY || flow_entry_has_out_group(entry, msg->out_group);
-           c = match_ext_nonstrict((struct ofl_ext_match *)entry->stats->match,
+        if (entry->stats->match->type == EXT_MATCH) {   
+            a = msg->out_port == OFPP_ANY || flow_entry_has_out_port(entry, msg->out_port);
+            b = msg->out_group == OFPG_ANY || flow_entry_has_out_group(entry, msg->out_group);
+            c = match_ext_nonstrict((struct ofl_ext_match *)entry->stats->match,
                                 (struct ofl_ext_match *)msg->match);
-        if (a && b && c) { 
-            flow_entry_update(entry);
-             if ((*stats_size) == (*stats_num)) {
-                (*stats) =xrealloc(*stats, (sizeof(struct ofl_flow_stats *)) * (*stats_size) * 2);
-                *stats_size *= 2;
-            }
-            (*stats)[(*stats_num)] = entry->stats;
-            (*stats_num)++;
-            
+            if (a && b && c) { 
+                flow_entry_update(entry);
+                if ((*stats_size) == (*stats_num)) {
+                    (*stats) =xrealloc(*stats, (sizeof(struct ofl_flow_stats *)) * (*stats_size) * 2);
+                    *stats_size *= 2;
+                }
+                (*stats)[(*stats_num)] = entry->stats;
+                (*stats_num)++;
+            }   
         }
     }
 }
@@ -449,18 +451,21 @@ flow_table_stats(struct flow_table *table, struct ofl_msg_stats_request_flow *ms
     struct flow_entry *entry;
 
     LIST_FOR_EACH(entry, struct flow_entry, match_node, &table->match_entries) {
-        if ((msg->out_port == OFPP_ANY || flow_entry_has_out_port(entry, msg->out_port)) &&
-            (msg->out_group == OFPG_ANY || flow_entry_has_out_group(entry, msg->out_group)) &&
-            match_std_nonstrict((struct ofl_match_standard *)entry->stats->match,
-                                (struct ofl_match_standard *)msg->match)) {
+    
+        if (entry->stats->match->type == OFPMT_STANDARD){
+            if ((msg->out_port == OFPP_ANY || flow_entry_has_out_port(entry, msg->out_port)) &&
+                (msg->out_group == OFPG_ANY || flow_entry_has_out_group(entry, msg->out_group)) &&
+                match_std_nonstrict((struct ofl_match_standard *)entry->stats->match,
+                                    (struct ofl_match_standard *)msg->match)) {
 
-            flow_entry_update(entry);
-            if ((*stats_size) == (*stats_num)) {
-                (*stats) = xrealloc(*stats, (sizeof(struct ofl_flow_stats *)) * (*stats_size) * 2);
-                *stats_size *= 2;
+                flow_entry_update(entry);
+                if ((*stats_size) == (*stats_num)) {
+                    (*stats) = xrealloc(*stats, (sizeof(struct ofl_flow_stats *)) * (*stats_size) * 2);
+                    *stats_size *= 2;
+                }
+                (*stats)[(*stats_num)] = entry->stats;
+                (*stats_num)++;
             }
-            (*stats)[(*stats_num)] = entry->stats;
-            (*stats_num)++;
         }
     }
 }
