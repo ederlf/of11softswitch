@@ -41,17 +41,19 @@ utilities/dpctl.o: utilities/dpctl.c config.h /usr/include/arpa/inet.h \
  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/bits/stdio.h /usr/include/bits/stdio2.h lib/compiler.h \
- include/openflow/match-ext.h include/openflow/openflow.h \
- include/openflow/../../lib/flex-array.h oflib-exp/ofl-exp-match.h \
- oflib/ofl-structs.h oflib/ofl.h oflib/ofl-actions.h oflib/ofl.h \
- lib/flex-array.h oflib/ofl-messages.h oflib/ofl-structs.h \
- oflib/ofl-actions.h oflib/ofl-print.h oflib/ofl-print.h \
- oflib-exp/ofl-exp.h oflib-exp/../oflib/ofl-messages.h \
+ lib/packets.h lib/random.h include/openflow/match-ext.h \
+ include/openflow/openflow.h include/openflow/../../lib/flex-array.h \
+ oflib-exp/ofl-exp-match.h oflib/ofl-structs.h oflib/ofl.h \
+ oflib/ofl-actions.h oflib/ofl.h lib/flex-array.h oflib/ofl-messages.h \
+ oflib/ofl-structs.h oflib/ofl-actions.h oflib/ofl-print.h \
+ oflib/ofl-print.h oflib-exp/ofl-exp.h oflib-exp/../oflib/ofl-messages.h \
+ oflib-exp/../oflib-exp/ofl-exp-ext-messages.h \
+ oflib-exp/../oflib-exp/../oflib/ofl-messages.h \
  oflib-exp/ofl-exp-openflow.h oflib-exp/../oflib/ofl-structs.h \
  oflib-exp/ofl-exp-ext-messages.h lib/command-line.h lib/compiler.h \
  lib/dpif.h include/openflow/nicira-ext.h include/openflow/openflow-ext.h \
- lib/ofpbuf.h lib/packets.h lib/random.h lib/ipv6_util.h \
- /usr/include/fcntl.h /usr/include/bits/fcntl.h /usr/include/bits/stat.h \
+ lib/ofpbuf.h lib/packets.h lib/ipv6_util.h /usr/include/fcntl.h \
+ /usr/include/bits/fcntl.h /usr/include/bits/stat.h \
  /usr/include/bits/fcntl2.h /usr/include/netdb.h /usr/include/rpc/netdb.h \
  /usr/include/bits/netdb.h /usr/include/sys/resource.h \
  /usr/include/bits/resource.h /usr/include/sys/stat.h \
@@ -240,6 +242,10 @@ lib/util.h:
 
 lib/compiler.h:
 
+lib/packets.h:
+
+lib/random.h:
+
 include/openflow/match-ext.h:
 
 include/openflow/openflow.h:
@@ -272,6 +278,10 @@ oflib-exp/ofl-exp.h:
 
 oflib-exp/../oflib/ofl-messages.h:
 
+oflib-exp/../oflib-exp/ofl-exp-ext-messages.h:
+
+oflib-exp/../oflib-exp/../oflib/ofl-messages.h:
+
 oflib-exp/ofl-exp-openflow.h:
 
 oflib-exp/../oflib/ofl-structs.h:
@@ -291,8 +301,6 @@ include/openflow/openflow-ext.h:
 lib/ofpbuf.h:
 
 lib/packets.h:
-
-lib/random.h:
 
 lib/ipv6_util.h:
 

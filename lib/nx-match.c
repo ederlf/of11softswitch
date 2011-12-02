@@ -34,19 +34,6 @@
 
 #define LOG_MODULE VLM_nx_match
 
-
-/* For each TLV_* field, define NFI_TLV_* as consecutive integers starting from
- * zero. */
-enum nxm_field_index {
-#define DEFINE_FIELD(HEADER, WILDCARD, DL_TYPES, NW_PROTO) \
-        NFI_TLV_##HEADER,
-#include "nx-match.def"
-    N_TLV_FIELDS
-};
-
-
-
-
 /* Possible masks for TLV_EXT_DL_DST_W. */
 static const uint8_t eth_all_0s[ETH_ADDR_LEN]
     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -57,6 +44,8 @@ static const uint8_t eth_mcast_1[ETH_ADDR_LEN]
 static const uint8_t eth_mcast_0[ETH_ADDR_LEN]
     = {0xfe, 0xff, 0xff, 0xff, 0xff, 0xff};
 
+
+/* Modify the match based in fields pre-requisites */
 static void
 mod_match(struct hmap * flow ){
 
@@ -81,12 +70,15 @@ mod_match(struct hmap * flow ){
                  f->value = (uint8_t*) dl_type;
             }
     }    
-    /* IPv4 / ARP */
-    if (*dl_type != ETH_TYPE_IP && *dl_type != ETH_TYPE_ARP) {
-                  
+    
+    /* IPv4 / IPv6 / ARP */
+    if (*dl_type != ETH_TYPE_IP && *dl_type != ETH_TYPE_ARP && *dl_type != ETH_TYPE_IPV6) {
+       
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_NW_TOS, 0),
             flow) {
-                    
+            
+            /* TODO Eder: Only remove the field node or change the node value? */  
+                  
             /*uint16_t *nw_tos = malloc (sizeof(uint16_t));
             uint16_t *nw_tos_m = malloc (sizeof(uint16_t)); 
             *nw_tos = 0x00;
@@ -128,6 +120,18 @@ mod_match(struct hmap * flow ){
             *ip_dst_m = 0xffffffff;
             f->value = (uint8_t*) ip_dst;
             f->mask = (uint8_t*) ip_dst_m;*/
+            hmap_remove(flow,&f->hmap_node);
+        } 
+        
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_IPV6_SRC, 0),
+                flow) {
+                    
+            hmap_remove(flow,&f->hmap_node);
+        } 
+        
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_IPV6_DST, 0),
+                flow) {
+                    
             hmap_remove(flow,&f->hmap_node);
         }                          
                  
@@ -197,7 +201,10 @@ mod_match(struct hmap * flow ){
                          
 }
    
+/* nx_pull_match() and helpers. */
 
+
+/* Puts the match in a hash_map structure */
 int 
 ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
 {
@@ -214,6 +221,10 @@ ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
         unsigned length = NXM_LENGTH(header);
         f->header = header;
         f->value = p + 4;
+        
+        /* As the header is the hash key and
+           the masked field header differs from non maskeds 
+           extract the header value without the mask bit */        
         if (NXM_HASMASK(header)){
             f->mask = p + 4 + length / 2;
             f->header = NXM_HEADER( NXM_VENDOR(header), NXM_FIELD(header), NXM_LENGTH(header)/2);
@@ -237,9 +248,6 @@ ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
     
     return match_len ? 1 : 0;
 }
-
-/* nx_pull_match() and helpers. */
-
 
 uint32_t
 ext_entry_ok(const void *p, unsigned int match_len)

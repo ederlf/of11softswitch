@@ -353,7 +353,6 @@ bool
 packet_handle_std_match(struct packet_handle_std *handle, struct ofl_match_standard *match) {
     packet_handle_std_validate(handle);
     bool ma = match_std_nonstrict(handle->match, match);
-    printf("MATCH %d\n",ma);
     return match;
 }
 

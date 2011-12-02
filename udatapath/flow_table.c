@@ -126,10 +126,9 @@ flow_table_ext_add(struct flow_table *table, struct ofl_ext_flow_mod *mod, bool 
     int i = 0;
     LIST_FOR_EACH (entry, struct flow_entry, match_node, &table->match_entries) {
         
-        /*TODO Check overlaps 
         if (check_overlap && ext_flow_entry_overlaps(entry, mod)) {
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_OVERLAP);
-        }*/
+        }
         
         if (entry->match->type == EXT_MATCH){
             i++;
@@ -204,6 +203,7 @@ flow_table_ext_modify(struct flow_table *table, struct ofl_ext_flow_mod *mod, bo
     match_found = false;
 
     LIST_FOR_EACH (entry, struct flow_entry, match_node, &table->match_entries) {
+    
         if (ext_flow_entry_matches(entry, mod, strict, true/*check_cookie*/)) {
             flow_entry_replace_instructions(entry, mod->instructions_num, mod->instructions);
             *insts_kept = true;
@@ -225,8 +225,13 @@ flow_table_delete(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool s
     struct flow_entry *entry, *next;
 
     LIST_FOR_EACH_SAFE (entry, next, struct flow_entry, match_node, &table->match_entries) {
-        if (flow_entry_matches(entry, mod, strict, true /*check_cookie*/)) {
-            flow_entry_remove(entry, OFPRR_DELETE);
+    
+        if (entry->stats->match->type == OFPMT_STANDARD){
+
+            if (flow_entry_matches(entry, mod, strict, true /*check_cookie*/)) {
+                
+                flow_entry_remove(entry, OFPRR_DELETE);
+            }
         }
     }
 
@@ -239,8 +244,11 @@ flow_table_ext_delete(struct flow_table *table, struct ofl_ext_flow_mod *mod, bo
     struct flow_entry *entry, *next;
 
     LIST_FOR_EACH_SAFE (entry, next, struct flow_entry, match_node, &table->match_entries) {
-        if (ext_flow_entry_matches(entry, mod, strict, true/*check_cookie*/)) {
-            flow_entry_remove(entry, OFPRR_DELETE);
+        
+        if (entry->stats->match->type == EXT_MATCH){
+            if (ext_flow_entry_matches(entry, mod, strict, true/*check_cookie*/)) {
+                flow_entry_remove(entry, OFPRR_DELETE);
+            }
         }
     }
 

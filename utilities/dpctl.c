@@ -1544,11 +1544,32 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             }
             else {
                  ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_RH_ID , 43 /*Routing Next Header Value */, 0xff);
-                 ext_m->header.length += 5;
+                 ext_m->header.length += 6;
             }
             continue;
         }
-        /*Hop by Hop */
+	    /*Routing extension header Addresses */
+        if (strncmp(token, MATCH_ROUTING_ADDRESS_IPV6 , strlen(MATCH_ROUTING_ADDRESS_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 struct in6_addr addr, mask;
+                 if (str_to_ipv6(token + strlen(MATCH_ROUTING_ADDRESS_IPV6)+1, &addr, &mask) < 0) {
+                     ofp_fatal(0, "Error parsing rh_add_ipv6: %s.", token);
+                 }
+                 else {
+                    
+                    ext_put_ipv6(&ext_m->match_fields,TLV_EXT_IPV6_RH_ADDRESS, &addr, &mask);
+                    
+                    }
+                 ext_m->header.length += 36; 
+
+            }
+            continue;
+        }
+
+        /*Hop by Hop header*/
         if (strncmp(token, MATCH_HBH_HEADER_IPV6 , strlen(MATCH_HBH_HEADER_IPV6 )) == 0) {
             if(!flow_format){ 
                    ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
@@ -1557,11 +1578,71 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                  uint8_t v = 0;
                  uint8_t mask = 0xff;
                  ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_HBH_ID, v /*Hop by Hop Header Value */, mask);
-                 ext_m->header.length += 5;
+                 ext_m->header.length += 6;
 
             }
             continue;
         }
+	    /*Hop by Hop Code*/
+        if (strncmp(token, MATCH_HBH_OPTION_CODE_IPV6 , strlen(MATCH_HBH_OPTION_CODE_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t hbh_code;
+                 uint8_t mask = 0xff;
+	         if (parse8(token + strlen(MATCH_HBH_OPTION_CODE_IPV6 KEY_VAL), NULL, 0, 0xff, &(hbh_code))) {
+                    ofp_fatal(0, "Error parsing hbh_code: %s.", token);
+                 }
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_HBH_OPT_CODE, hbh_code /*Hop by Hop Header Value */, mask);
+                 ext_m->header.length += 6;
+
+            }
+            continue;
+        }
+	    /*Destination Option Header */
+	    if (strncmp(token, MATCH_DO_HEADER_IPV6 , strlen(MATCH_DO_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t v = 60;
+                 uint8_t mask = 0xff;
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_DOH_ID, v /*Destination Option Header Value */, mask);
+                 ext_m->header.length += 6;
+
+            }
+            continue;
+        }
+	    /*Authentication Header */
+	    if (strncmp(token, MATCH_AUTHENTICATION_HEADER_IPV6 , strlen(MATCH_AUTHENTICATION_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t v = 51;
+                 uint8_t mask = 0xff;
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_AH_ID, v /*Authentication Header Value */, mask);
+                 ext_m->header.length += 6;
+
+            }
+            continue;
+        }
+	    /*Fragmentation Header */
+	    if (strncmp(token, MATCH_FRAGMENT_HEADER_IPV6 , strlen(MATCH_FRAGMENT_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t v = 44;
+                 uint8_t mask = 0xff;
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_FH_ID, v /*Fragmentation Header Value */, mask);
+                 ext_m->header.length += 6;
+
+            }
+            continue;
+        }
+
         if (strncmp(token, MATCH_METADATA_MASK KEY_VAL, strlen(MATCH_METADATA_MASK KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (sscanf(token, MATCH_METADATA_MASK KEY_VAL "0x%"SCNx64"", &(m->metadata_mask)) != 1) {
