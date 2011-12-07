@@ -18,7 +18,6 @@ AM_CPPFLAGS += -I $(top_srcdir)/include
 AM_CPPFLAGS += -I $(top_srcdir)/lib
 
 AM_CFLAGS = -Wstrict-prototypes
-
 if NDEBUG
 AM_CPPFLAGS += -DNDEBUG
 AM_CFLAGS += -fomit-frame-pointer
@@ -57,6 +56,7 @@ SUFFIXES = .in
                 -e 's,[@]PERL[@],$(PERL),g' > $@
 
 include lib/automake.mk
+include nbee_link/automake.mk
 include oflib/automake.mk
 include oflib-exp/automake.mk
 include secchan/automake.mk
