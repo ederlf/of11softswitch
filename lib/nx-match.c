@@ -342,6 +342,7 @@ ext_put_16m(struct flex_array *f, uint32_t header, uint16_t value, uint16_t mask
         ext_put_16w(f, NXM_MAKE_WILD_HEADER(header), value, mask);
         break;
     }
+    f->total++;
 }
 
 void
@@ -360,6 +361,7 @@ ext_put_32w(struct flex_array *f, uint32_t header, uint32_t value, uint32_t mask
     ext_put_header(f, header);
     flex_array_put(f, &value, sizeof value);
     flex_array_put(f, &mask, sizeof mask);
+    f->total++;
 }
 
 void
@@ -377,6 +379,7 @@ ext_put_32m(struct flex_array *f, uint32_t header, uint32_t value, uint32_t mask
         ext_put_32w(f, NXM_MAKE_WILD_HEADER(header), value, mask);
         break;
     }
+   f->total++;
 }
 
 void
@@ -384,6 +387,7 @@ ext_put_64(struct flex_array *f, uint32_t header, uint64_t value)
 {
     ext_put_header(f, header);
     flex_array_put(f, &value, sizeof value);
+    f->total++;
 }
 
 void
@@ -392,6 +396,7 @@ ext_put_64w(struct flex_array *f, uint32_t header, uint64_t value, uint64_t mask
     ext_put_header(f, header);
     flex_array_put(f, &value, sizeof value);
     flex_array_put(f, &mask, sizeof mask);
+    f->total++;
 }
 
           
@@ -410,6 +415,7 @@ ext_put_64m(struct flex_array *f, uint32_t header, uint64_t value, uint64_t mask
         ext_put_64w(f, NXM_MAKE_WILD_HEADER(header), value, mask);
         break;
     }
+    f->total++;
 }
 
 void

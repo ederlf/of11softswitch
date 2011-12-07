@@ -1,4 +1,16 @@
-/Makefile
-/Makefile.in
-/ofdatapath
-/ofdatapath.8
+# Lines starting with '#' are considered comments.
+# Ignore any file named .Po.
+.po
+# Ignore objects and archives.
+.[oa]
+
+autom4te.cache/output.0
+autom4te.cache/output.1
+autom4te.cache/traces.0
+autom4te.cache/traces.1
+config.h
+config.h.in
+config.log
+config.status
+configure.ac
+

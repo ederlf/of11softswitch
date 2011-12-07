@@ -54,8 +54,9 @@ DIST_COMMON = README $(am__configure_deps) $(dist_commands_DATA) \
 	$(srcdir)/config.h.in $(srcdir)/debian/automake.mk \
 	$(srcdir)/include/automake.mk \
 	$(srcdir)/include/openflow/automake.mk \
-	$(srcdir)/lib/automake.mk $(srcdir)/oflib-exp/automake.mk \
-	$(srcdir)/oflib/automake.mk $(srcdir)/secchan/automake.mk \
+	$(srcdir)/lib/automake.mk $(srcdir)/nbee_link/automake.mk \
+	$(srcdir)/oflib-exp/automake.mk $(srcdir)/oflib/automake.mk \
+	$(srcdir)/secchan/automake.mk \
 	$(srcdir)/secchan/commands/automake.mk \
 	$(srcdir)/udatapath/automake.mk \
 	$(srcdir)/utilities/automake.mk $(top_srcdir)/configure \
@@ -167,6 +168,12 @@ am_lib_libopenflow_a_OBJECTS = lib/backtrace.$(OBJEXT) \
 #	lib/dhparams.$(OBJEXT)
 lib_libopenflow_a_OBJECTS = $(am_lib_libopenflow_a_OBJECTS) \
 	$(nodist_lib_libopenflow_a_OBJECTS)
+nbee_link_libnbee_link_a_AR = $(AR) $(ARFLAGS)
+nbee_link_libnbee_link_a_DEPENDENCIES = lib/util.o lib/hmap.o \
+	lib/list_t.o
+am_nbee_link_libnbee_link_a_OBJECTS = nbee_link/nbee_link.$(OBJEXT)
+nbee_link_libnbee_link_a_OBJECTS =  \
+	$(am_nbee_link_libnbee_link_a_OBJECTS)
 oflib_exp_liboflib_exp_a_AR = $(AR) $(ARFLAGS)
 oflib_exp_liboflib_exp_a_LIBADD =
 am_oflib_exp_liboflib_exp_a_OBJECTS = oflib-exp/ofl-exp.$(OBJEXT) \
@@ -263,8 +270,8 @@ am_udatapath_ofdatapath_OBJECTS =  \
 	udatapath/udatapath_ofdatapath-udatapath.$(OBJEXT)
 udatapath_ofdatapath_OBJECTS = $(am_udatapath_ofdatapath_OBJECTS)
 udatapath_ofdatapath_DEPENDENCIES = lib/libopenflow.a oflib/liboflib.a \
-	oflib-exp/liboflib_exp.a $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	oflib-exp/liboflib_exp.a nbee_link/libnbee_link.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am_utilities_dpctl_OBJECTS = utilities/dpctl.$(OBJEXT)
 utilities_dpctl_OBJECTS = $(am_utilities_dpctl_OBJECTS)
 utilities_dpctl_DEPENDENCIES = lib/libopenflow.a oflib/liboflib.a \
@@ -310,8 +317,14 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
 SOURCES = $(lib_libopenflow_a_SOURCES) \
 	$(nodist_lib_libopenflow_a_SOURCES) \
+	$(nbee_link_libnbee_link_a_SOURCES) \
 	$(oflib_exp_liboflib_exp_a_SOURCES) \
 	$(oflib_liboflib_a_SOURCES) \
 	$(udatapath_libudatapath_a_SOURCES) \
@@ -319,6 +332,7 @@ SOURCES = $(lib_libopenflow_a_SOURCES) \
 	$(utilities_dpctl_SOURCES) $(utilities_ofp_discover_SOURCES) \
 	$(utilities_ofp_kill_SOURCES) $(utilities_vlogconf_SOURCES)
 DIST_SOURCES = $(am__lib_libopenflow_a_SOURCES_DIST) \
+	$(nbee_link_libnbee_link_a_SOURCES) \
 	$(oflib_exp_liboflib_exp_a_SOURCES) \
 	$(oflib_liboflib_a_SOURCES) \
 	$(am__udatapath_libudatapath_a_SOURCES_DIST) \
@@ -395,6 +409,9 @@ CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2 -Wall -Wno-sign-compare -Wpointer-arith -Wdeclaration-after-statement -Wformat-security -Wswitch-enum -Wunused-parameter -Wstrict-aliasing -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-field-initializers -Wno-override-init
 CPP = gcc -E
 CPPFLAGS = 
+CXX = g++
+CXXDEPMODE = depmode=gcc3
+CXXFLAGS = -g -O2
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -416,7 +433,7 @@ INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 KARCH = 
 LDFLAGS = 
 LIBOBJS = 
-LIBS = -lnbeelink 
+LIBS = -lnbee 
 LOGDIR = ${localstatedir}/log/${PACKAGE}
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /home/eder/Documents/Test/of11softswitchv6/build-aux/missing --run makeinfo
@@ -448,6 +465,7 @@ abs_srcdir = /home/eder/Documents/Test/of11softswitchv6
 abs_top_builddir = /home/eder/Documents/Test/of11softswitchv6
 abs_top_srcdir = /home/eder/Documents/Test/of11softswitchv6
 ac_ct_CC = gcc
+ac_ct_CXX = g++
 am__include = include
 am__leading_dot = .
 am__quote = 
@@ -563,8 +581,10 @@ noinst_HEADERS = include/openflow/nicira-ext.h \
 	include/openflow/private-ext.h include/openflow/openflow.h \
 	include/openflow/match-ext.h \
 	include/openflow/openflow-netlink.h
-noinst_LIBRARIES = lib/libopenflow.a oflib/liboflib.a \
-	oflib-exp/liboflib_exp.a $(am__append_6)
+
+# Process this file with automake to produce Makefile.in
+noinst_LIBRARIES = lib/libopenflow.a nbee_link/libnbee_link.a \
+	oflib/liboflib.a oflib-exp/liboflib_exp.a $(am__append_6)
 noinst_SCRIPTS = utilities/ofp-pki-cgi utilities/ofp-parse-leaks
 ro_c = echo '/* -*- mode: c; buffer-read-only: t -*- */'
 SUFFIXES = .in
@@ -617,6 +637,17 @@ lib_libopenflow_a_LIBADD = oflib/ofl-actions.o \
                            oflib-exp/ofl-exp-openflow.o
 
 #nodist_lib_libopenflow_a_SOURCES = lib/dhparams.c
+#lib_LTLIBRARIES += nbee_link/libnbeelink.la
+#lib_LTLIBRARIES = libnbeelink.la
+nbee_link_libnbee_link_a_LIBADD = \
+	lib/util.o 	\
+	lib/hmap.o 	\
+	lib/list_t.o
+
+nbee_link_libnbee_link_a_SOURCES = nbee_link/nbee_link.cpp \
+			nbee_link/nbee_link.h
+
+MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.sub config.h.in configure depcomp install-sh missing ltmain.sh *~ *.tar.*
 oflib_liboflib_a_SOURCES = \
 	oflib/ofl.h \
 	oflib/ofl-actions.c \
@@ -724,7 +755,7 @@ udatapath_ofdatapath_SOURCES = \
 	udatapath/pipeline.h \
 	udatapath/udatapath.c
 
-udatapath_ofdatapath_LDADD = lib/libopenflow.a oflib/liboflib.a oflib-exp/liboflib_exp.a $(SSL_LIBS) $(FAULT_LIBS)
+udatapath_ofdatapath_LDADD = lib/libopenflow.a oflib/liboflib.a oflib-exp/liboflib_exp.a nbee_link/libnbee_link.a $(SSL_LIBS) $(FAULT_LIBS)
 udatapath_ofdatapath_CPPFLAGS = $(AM_CPPFLAGS) $(am__append_5)
 #udatapath_libudatapath_a_SOURCES = \
 #	udatapath/action_set.c \
@@ -766,10 +797,10 @@ all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .in .c .o .obj
+.SUFFIXES: .in .c .cpp .o .obj
 am--refresh:
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/lib/automake.mk $(srcdir)/oflib/automake.mk $(srcdir)/oflib-exp/automake.mk $(srcdir)/secchan/automake.mk $(srcdir)/secchan/commands/automake.mk $(srcdir)/utilities/automake.mk $(srcdir)/udatapath/automake.mk $(srcdir)/include/automake.mk $(srcdir)/include/openflow/automake.mk $(srcdir)/debian/automake.mk $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/lib/automake.mk $(srcdir)/nbee_link/automake.mk $(srcdir)/oflib/automake.mk $(srcdir)/oflib-exp/automake.mk $(srcdir)/secchan/automake.mk $(srcdir)/secchan/commands/automake.mk $(srcdir)/utilities/automake.mk $(srcdir)/udatapath/automake.mk $(srcdir)/include/automake.mk $(srcdir)/include/openflow/automake.mk $(srcdir)/debian/automake.mk $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -911,6 +942,18 @@ lib/libopenflow.a: $(lib_libopenflow_a_OBJECTS) $(lib_libopenflow_a_DEPENDENCIES
 	-rm -f lib/libopenflow.a
 	$(lib_libopenflow_a_AR) lib/libopenflow.a $(lib_libopenflow_a_OBJECTS) $(lib_libopenflow_a_LIBADD)
 	$(RANLIB) lib/libopenflow.a
+nbee_link/$(am__dirstamp):
+	@$(MKDIR_P) nbee_link
+	@: > nbee_link/$(am__dirstamp)
+nbee_link/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) nbee_link/$(DEPDIR)
+	@: > nbee_link/$(DEPDIR)/$(am__dirstamp)
+nbee_link/nbee_link.$(OBJEXT): nbee_link/$(am__dirstamp) \
+	nbee_link/$(DEPDIR)/$(am__dirstamp)
+nbee_link/libnbee_link.a: $(nbee_link_libnbee_link_a_OBJECTS) $(nbee_link_libnbee_link_a_DEPENDENCIES) nbee_link/$(am__dirstamp)
+	-rm -f nbee_link/libnbee_link.a
+	$(nbee_link_libnbee_link_a_AR) nbee_link/libnbee_link.a $(nbee_link_libnbee_link_a_OBJECTS) $(nbee_link_libnbee_link_a_LIBADD)
+	$(RANLIB) nbee_link/libnbee_link.a
 oflib-exp/$(am__dirstamp):
 	@$(MKDIR_P) oflib-exp
 	@: > oflib-exp/$(am__dirstamp)
@@ -1336,6 +1379,7 @@ mostlyclean-compile:
 	-rm -f lib/vconn.$(OBJEXT)
 	-rm -f lib/vlog-socket.$(OBJEXT)
 	-rm -f lib/vlog.$(OBJEXT)
+	-rm -f nbee_link/nbee_link.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-ext-messages-pack.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-ext-messages-unpack.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-ext-messages.$(OBJEXT)
@@ -1458,6 +1502,7 @@ include lib/$(DEPDIR)/vconn-unix.Po
 include lib/$(DEPDIR)/vconn.Po
 include lib/$(DEPDIR)/vlog-socket.Po
 include lib/$(DEPDIR)/vlog.Po
+include nbee_link/$(DEPDIR)/nbee_link.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages-pack.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages-unpack.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages.Po
@@ -2046,6 +2091,22 @@ udatapath/udatapath_ofdatapath-udatapath.obj: udatapath/udatapath.c
 #	source='udatapath/udatapath.c' object='udatapath/udatapath_ofdatapath-udatapath.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-udatapath.obj `if test -f 'udatapath/udatapath.c'; then $(CYGPATH_W) 'udatapath/udatapath.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/udatapath.c'; fi`
+
+.cpp.o:
+	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	source='$<' object='$@' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	source='$<' object='$@' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 install-man8: $(dist_man_MANS) $(man_MANS)
 	@$(NORMAL_INSTALL)
 	test -z "$(man8dir)" || $(MKDIR_P) "$(DESTDIR)$(man8dir)"
@@ -2555,6 +2616,8 @@ distclean-generic:
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
 	-rm -f lib/$(DEPDIR)/$(am__dirstamp)
 	-rm -f lib/$(am__dirstamp)
+	-rm -f nbee_link/$(DEPDIR)/$(am__dirstamp)
+	-rm -f nbee_link/$(am__dirstamp)
 	-rm -f oflib-exp/$(DEPDIR)/$(am__dirstamp)
 	-rm -f oflib-exp/$(am__dirstamp)
 	-rm -f oflib/$(DEPDIR)/$(am__dirstamp)
@@ -2570,6 +2633,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-noinstLIBRARIES \
@@ -2577,7 +2641,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-noinstLIBRARIES \
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf lib/$(DEPDIR) oflib-exp/$(DEPDIR) oflib/$(DEPDIR) secchan/$(DEPDIR) udatapath/$(DEPDIR) utilities/$(DEPDIR)
+	-rm -rf lib/$(DEPDIR) nbee_link/$(DEPDIR) oflib-exp/$(DEPDIR) oflib/$(DEPDIR) secchan/$(DEPDIR) udatapath/$(DEPDIR) utilities/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-tags
@@ -2628,7 +2692,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf lib/$(DEPDIR) oflib-exp/$(DEPDIR) oflib/$(DEPDIR) secchan/$(DEPDIR) udatapath/$(DEPDIR) utilities/$(DEPDIR)
+	-rm -rf lib/$(DEPDIR) nbee_link/$(DEPDIR) oflib-exp/$(DEPDIR) oflib/$(DEPDIR) secchan/$(DEPDIR) udatapath/$(DEPDIR) utilities/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
