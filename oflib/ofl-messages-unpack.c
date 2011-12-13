@@ -1332,7 +1332,20 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
            
         }
     }
-     
+    
+    /* Note: len must be decreased by the amount of buffer used by the
+             unpack functions. At this point the whole message must be
+             consumed, and len should equal to zero. */
+    if (len != 0) {
+        OFL_LOG_WARN(LOG_MODULE, "Received message seemed to be valid, but it contained unused data (%zu).", len);
+        if (OFL_LOG_IS_DBG_ENABLED(LOG_MODULE)) {
+            char *str = ofl_hex_to_string(buf, buf_len < 1024 ? buf_len : 1024);
+
+            OFL_LOG_DBG(LOG_MODULE, "Error happened after processing %zu bytes of packet.", ntohs(oh->length) - len);
+            OFL_LOG_DBG(LOG_MODULE, "\n%s\n", str);
+            free(str);
+        }
+    }
     
    (*msg)->type = (enum ofp_type) oh->type;
     
