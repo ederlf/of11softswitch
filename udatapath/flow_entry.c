@@ -314,7 +314,14 @@ del_group_refs(struct flow_entry *entry) {
     struct group_ref_entry *gre, *next;
 
     LIST_FOR_EACH_SAFE(gre, next, struct group_ref_entry, node, &entry->group_refs) {
-        group_entry_del_flow_ref(gre->entry, entry);
+
+    	struct group_entry *group = group_table_find(entry->dp->groups, gre->group_id);
+    	if (group != NULL) {
+    	    group_entry_del_flow_ref(group, entry);
+    	} else {
+            VLOG_WARN_RL(LOG_MODULE, &rl, "Trying to access non-existing group(%u).", gre->group_id);
+    	}
+    	list_remove(&gre->node);
         free(gre);
     }
 }
