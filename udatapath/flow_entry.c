@@ -57,8 +57,8 @@
 static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(60, 60);
 
 struct group_ref_entry {
-    struct list node;
-    struct group_entry *entry;
+    struct list   node;	
+    uint32_t      group_id;
 };
 
 static void
@@ -270,7 +270,7 @@ has_group_ref(struct flow_entry *entry, uint32_t group_id) {
     struct group_ref_entry *g;
 
     LIST_FOR_EACH(g, struct group_ref_entry, node, &entry->group_refs) {
-        if (g->entry->stats->group_id == group_id) {
+        if (g->group_id == group_id)  {
             return true;
         }
     }
@@ -293,7 +293,7 @@ init_group_refs(struct flow_entry *entry) {
                     struct ofl_action_group *ag = (struct ofl_action_group *)(ia->actions[j]);
                     if (!has_group_ref(entry, ag->group_id)) {
                         struct group_ref_entry *gre = xmalloc(sizeof(struct group_ref_entry));
-                        gre->entry = group_table_find(entry->dp->groups, ag->group_id);
+                        gre->group_id = ag->group_id;
                         list_insert(&entry->group_refs, &gre->node);
                     }
                 }
@@ -303,7 +303,12 @@ init_group_refs(struct flow_entry *entry) {
 
     /* notify groups of the new referencing flow entry */
     LIST_FOR_EACH(e, struct group_ref_entry, node, &entry->group_refs) {
-        group_entry_add_flow_ref(e->entry, entry);
+        struct group_entry *group = group_table_find(entry->dp->groups, e->group_id);
+        if (group != NULL) {
+        	group_entry_add_flow_ref(group, entry);
+        } else {
+        	VLOG_WARN_RL(LOG_MODULE, &rl, "Trying to access non-existing group(%u).", e->group_id);
+        }	
     }
 }
 
